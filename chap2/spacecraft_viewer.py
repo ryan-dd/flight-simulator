@@ -94,19 +94,33 @@ class spacecraft_viewer():
             Points that define the spacecraft, and the colors of the triangular mesh
             Define the points on the aircraft following diagram in Figure C.3
         """
-        #points are in NED coordinates
-        points = np.array([[1, 1, 0],  # point 1
-                           [1, -1, 0],  # point 2
-                           [-1, -1, 0],  # point 3
-                           [-1, 1, 0],  # point 4
-                           [1, 1, -2],  # point 5
-                           [1, -1, -2],  # point 6
-                           [-1, -1, -2],  # point 7
-                           [-1, 1, -2],  # point 8
-                           [1.5, 1.5, 0],  # point 9
-                           [1.5, -1.5, 0],  # point 10
-                           [-1.5, -1.5, 0],  # point 11
-                           [-1.5, 1.5, 0],  # point 12
+        fuse_h = 2
+        fuse_w = 2
+        fuse_l1 = 4
+        fuse_l2 = 2
+        wing_l = 3
+        wing_w = 8
+        fuse_l3 = 8
+        tail_h = 2
+        tailwing_w = 4
+        tailwing_l = 2
+        #points are in North East Down coordinates
+        points = np.array([[fuse_l1, 0, 0],  # point 1
+                           [fuse_l2, fuse_w/2, fuse_h/2],  # point 2
+                           [fuse_l2, -fuse_w/2, fuse_h/2],  # point 3
+                           [fuse_l2, -fuse_w/2, -fuse_h/2],  # point 4
+                           [fuse_l2, fuse_w/2, -fuse_h/2],  # point 5
+                           [-fuse_l3, 0, 0],  # point 6
+                           [0, wing_w/2, 0],  # point 7
+                           [-wing_l, wing_w/2, 0],  # point 8
+                           [-wing_l, -wing_w/2, 0],  # point 9
+                           [0, -wing_w/2, 0],  # point 10
+                           [-fuse_l3+tailwing_l, tailwing_w/2, 0],  # point 11
+                           [-fuse_l3, tailwing_w/2, 0],  # point 12
+                           [-fuse_l3, -tailwing_w/2, 0],  # point 13
+                           [-fuse_l3+tailwing_l, -tailwing_w/2, 0],  # point 14
+                           [-fuse_l3+tailwing_l, 0, 0],  # point 15
+                           [-fuse_l3, 0, -tail_h],  # point 16
                           ]).T
         # scale points for better rendering
         scale = 10
@@ -117,19 +131,20 @@ class spacecraft_viewer():
         green = np.array([0., 1., 0., 1])
         blue = np.array([0., 0., 1., 1])
         yellow = np.array([1., 1., 0., 1])
-        meshColors = np.empty((12, 3, 4), dtype=np.float32)
+        meshColors = np.empty((13, 3, 4), dtype=np.float32)
         meshColors[0] = yellow  # front
         meshColors[1] = yellow  # front
-        meshColors[2] = blue  # back
-        meshColors[3] = blue  # back
+        meshColors[2] = yellow  # back
+        meshColors[3] = yellow  # back
         meshColors[4] = blue  # right
         meshColors[5] = blue  # right
         meshColors[6] = blue  # left
         meshColors[7] = blue  # left
-        meshColors[8] = blue  # top
-        meshColors[9] = blue  # top
+        meshColors[8] = green  # top
+        meshColors[9] = green  # top
         meshColors[10] = green  # bottom
         meshColors[11] = green  # bottom
+        meshColors[12] = yellow  # bottom
         return points, meshColors
 
     def _points_to_mesh(self, points):
@@ -139,18 +154,19 @@ class spacecraft_viewer():
           (a rectangle requires two triangular mesh faces)
         """
         points=points.T
-        mesh = np.array([[points[0], points[1], points[5]],  # front
-                         [points[0], points[4], points[5]],  # front
-                         [points[3], points[2], points[6]],  # back
-                         [points[3], points[7], points[6]],  # back
-                         [points[3], points[0], points[4]],  # right
-                         [points[3], points[7], points[4]],  # right
-                         [points[2], points[1], points[5]],  # left
-                         [points[2], points[6], points[5]],  # left
-                         [points[7], points[4], points[5]],  # top
-                         [points[7], points[6], points[5]],  # top
-                         [points[11], points[8], points[9]],  # bottom
-                         [points[11], points[10], points[9]],  # bottom
+        mesh = np.array([[points[0], points[1], points[2]],  # front
+                         [points[0], points[2], points[3]],  # front
+                         [points[0], points[3], points[4]],  # front
+                         [points[0], points[4], points[1]],  # front
+                         [points[5], points[1], points[2]],  # body
+                         [points[5], points[2], points[3]],  # body
+                         [points[5], points[3], points[4]],  # body
+                         [points[5], points[4], points[1]],  # body
+                         [points[6], points[7], points[9]],  # front wing
+                         [points[8], points[7], points[9]],  # front wing
+                         [points[10], points[11], points[12]],  # back wing
+                         [points[10], points[12], points[13]],  # back wing
+                         [points[14], points[15], points[5]],  # tail
                          ])
         return mesh
 
