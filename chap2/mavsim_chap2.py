@@ -56,33 +56,3 @@ while sim_time < SIM.end_time:
 
 print("Press Ctrl-Q to exit...")
 if VIDEO == True: video.close()
-
-# main simulation loop
-# Rotation first
-while sim_time < SIM.end_time:
-    #-------vary states to check viewer-------------
-    if sim_time < SIM.end_time/6:
-        state.psi += 0.1*SIM.ts_simulation
-    elif sim_time < 2*SIM.end_time/6:
-        state.theta += 0.1*SIM.ts_simulation
-    elif sim_time < 3*SIM.end_time/6:
-        state.phi += 0.1*SIM.ts_simulation
-    elif sim_time < 4*SIM.end_time/6:
-        state.pn += 10*SIM.ts_simulation
-    elif sim_time < 5*SIM.end_time/6:
-        state.pe += 10*SIM.ts_simulation
-    else:
-        state.h += 10*SIM.ts_simulation
-
-    #-------update viewer and video-------------
-    spacecraft_view.update(state)
-    if VIDEO == True: video.update(sim_time)
-
-    #-------increment time-------------
-    sim_time += SIM.ts_simulation
-
-print("Press Ctrl-Q to exit...")
-if VIDEO == True: video.close()
-
-
-
