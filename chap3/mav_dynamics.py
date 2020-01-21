@@ -89,26 +89,44 @@ class mav_dynamics:
         m = forces_moments.item(4)
         n = forces_moments.item(5)
 
+        pddots = (np.array([
+            [e1**2 + e0**2 - e2**2 - e3**2, 2*(e1*e2 - e3*e0), 2*(e1*e3 + e2*e0)],
+            [2*(e1*e2 + e3*e0), e2**2 + e0**2 - e1**2 - e3**3, 2*(e2*e3 - e1*e0)],
+            [2*(e1*e3 - e2*e0), 2*(e2*e3 + e1*e0), e3**2 + e0**2 - e1**2 - e2**2]]) @ np.vstack((u,v,w))).flatten()
         # position kinematics
-        pn_dot =
-        pe_dot =
-        pd_dot =
+        pn_dot = pddots[0]
+        pe_dot = pddots[1]
+        pd_dot = pddots[2]
 
         # position dynamics
-        u_dot =
-        v_dot =
-        w_dot =
+        u_dot = r*v - q*w + 1/m * fx
+        v_dot = p*w - r*u + 1/m * fy
+        w_dot = q*u - p*v + 1/m * fz
 
+        edots = np.array([
+            [0, -p, -q , -r],
+            [p, 0, r, -q],
+            [q, -r, 0, p],
+            [r, q, -p, 0]]) @ np.vstack((e0, e1, e2, e3)).flatten()
         # rotational kinematics
-        e0_dot =
-        e1_dot =
-        e2_dot =
-        e3_dot =
+        e0_dot = edots[0]
+        e1_dot = edots[1]
+        e2_dot = edots[2]
+        e3_dot = edots[3]
 
+        gamma1 = 0
+        gamma2 = 0
+        gamma3 = 0
+        gamma4 = 0
+        gamma5 = 0
+        gamma6 = 0
+        gamma7 = 0
+        gamma8 = 0
+        Jy = 0
         # rotatonal dynamics
-        p_dot =
-        q_dot =
-        r_dot = 
+        p_dot = gamma1*p*q-gamma2*q*r + gamma3*l+gamma4*n
+        q_dot = gamma5*p*r - gamma6*(p**2 - r**2) + 1/Jy*m
+        r_dot = gamma7*p*q * gamma1*q*r + gamma4*l+gamma8*n 
 
         # collect the derivative of the states
         x_dot = np.array([[pn_dot, pe_dot, pd_dot, u_dot, v_dot, w_dot,
