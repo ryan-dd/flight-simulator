@@ -16,12 +16,12 @@ from chap3.mav_dynamics import mav_dynamics
 
 
 # initialize the visualization
-VIDEO = False  # True==write video, False==don't write video
+VIDEO = True  # True==write video, False==don't write video
 mav_view = mav_viewer()  # initialize the mav viewer
 data_view = data_viewer()  # initialize view of data plots
 if VIDEO == True:
-    from chap2.video_writer import videoWriter
-    video = videoWriter(video_name="chap3_video.avi",
+    from chap2.video_writer import video_writer
+    video = video_writer(video_name="chap3_video.avi",
                          bounding_box=(0, 0, 1000, 1000),
                          output_rate=SIM.ts_video)
 
@@ -44,13 +44,13 @@ while sim_time < SIM.end_time:
     forces_moments = np.array([[fx, fy, fz, Mx, My, Mz]]).T
 
     #-------physical system-------------
-    mav.update(forces_moments)  # propagate the MAV dynamics
+    mav.update_state(forces_moments)  # propagate the MAV dynamics
 
     #-------update viewer-------------
-    mav_view.update(mav.true_state)  # plot body of MAV
-    data_view.update(mav.true_state, # true states
-                     mav.true_state, # estimated states
-                     mav.true_state, # commanded states
+    mav_view.update(mav.msg_true_state)  # plot body of MAV
+    data_view.update(mav.msg_true_state, # true states
+                     mav.msg_true_state, # estimated states
+                     mav.msg_true_state, # commanded states
                      SIM.ts_simulation)
     if VIDEO == True: video.update(sim_time)
 

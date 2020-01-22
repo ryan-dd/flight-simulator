@@ -25,8 +25,7 @@ class mav_dynamics:
         # set initial states based on parameter file
         # _state is the 13x1 internal state of the aircraft that is being propagated:
         # _state = [pn, pe, pd, u, v, w, e0, e1, e2, e3, p, q, r]
-        self._state = np.array([
-                                ])
+        self._state = np.array([pn0, pe0, pd0, u0, v0, w0, e0, e1, e2, e3, p0, q0, r0])[:, None]
         self.msg_true_state = msg_state()
 
     ###################################
@@ -99,9 +98,9 @@ class mav_dynamics:
         pd_dot = pddots[2]
 
         # position dynamics
-        u_dot = r*v - q*w + 1/m * fx
-        v_dot = p*w - r*u + 1/m * fy
-        w_dot = q*u - p*v + 1/m * fz
+        u_dot = r*v - q*w + 1/mass * fx
+        v_dot = p*w - r*u + 1/mass * fy
+        w_dot = q*u - p*v + 1/mass * fz
 
         edots = np.array([
             [0, -p, -q , -r],
