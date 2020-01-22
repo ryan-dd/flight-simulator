@@ -22,10 +22,10 @@ r0 = 0  # initial yaw rate
 Va0 = np.sqrt(u0**2+v0**2+w0**2)
 #   Quaternion State
 e = Euler2Quaternion(phi0, theta0, psi0)
-e0 = e.item(0)
-e1 = e.item(1)
-e2 = e.item(2)
-e3 = e.item(3)
+e0 = e[0]
+e1 = e[1]
+e2 = e[2]
+e3 = e[3]
 
 
 ######################################################################################

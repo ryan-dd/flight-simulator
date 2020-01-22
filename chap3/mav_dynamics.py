@@ -16,7 +16,7 @@ import numpy as np
 # load message types
 from message_types.msg_state import msg_state
 
-import parameters.aerosonde_parameters as MAV
+from parameters.aerosonde_parameters import *
 from tools.tools import Quaternion2Euler
 
 class mav_dynamics:
