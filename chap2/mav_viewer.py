@@ -10,7 +10,7 @@ import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 import pyqtgraph.Vector as Vector
 
-class spacecraft_viewer():
+class mav_viewer():
     def __init__(self):
         # initialize Qt gui application and window
         self.app = pg.QtGui.QApplication([])  # initialize QT

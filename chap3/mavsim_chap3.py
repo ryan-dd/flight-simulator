@@ -10,15 +10,15 @@ sys.path.append('..')
 import numpy as np
 import parameters.simulation_parameters as SIM
 
-from chap2.mav_viewer import mavViewer
-from chap3.data_viewer import dataViewer
-from chap3.mav_dynamics import mavDynamics
+from chap2.mav_viewer import mav_viewer
+from chap3.data_viewer import data_viewer
+from chap3.mav_dynamics import mav_dynamics
 
 
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
-mav_view = mavViewer()  # initialize the mav viewer
-data_view = dataViewer()  # initialize view of data plots
+mav_view = mav_viewer()  # initialize the mav viewer
+data_view = data_viewer()  # initialize view of data plots
 if VIDEO == True:
     from chap2.video_writer import videoWriter
     video = videoWriter(video_name="chap3_video.avi",
@@ -26,7 +26,7 @@ if VIDEO == True:
                          output_rate=SIM.ts_video)
 
 # initialize elements of the architecture
-mav = mavDynamics(SIM.ts_simulation)
+mav = mav_dynamics(SIM.ts_simulation)
 
 # initialize the simulation time
 sim_time = SIM.start_time

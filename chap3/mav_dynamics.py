@@ -114,19 +114,10 @@ class mav_dynamics:
         e2_dot = edots[2]
         e3_dot = edots[3]
 
-        gamma1 = 0
-        gamma2 = 0
-        gamma3 = 0
-        gamma4 = 0
-        gamma5 = 0
-        gamma6 = 0
-        gamma7 = 0
-        gamma8 = 0
-        Jy = 0
         # rotatonal dynamics
         p_dot = gamma1*p*q-gamma2*q*r + gamma3*l+gamma4*n
         q_dot = gamma5*p*r - gamma6*(p**2 - r**2) + 1/Jy*m
-        r_dot = gamma7*p*q * gamma1*q*r + gamma4*l+gamma8*n 
+        r_dot = gamma7*p*q - gamma1*q*r + gamma4*l+gamma8*n 
 
         # collect the derivative of the states
         x_dot = np.array([[pn_dot, pe_dot, pd_dot, u_dot, v_dot, w_dot,
