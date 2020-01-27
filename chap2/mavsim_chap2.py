@@ -9,7 +9,7 @@ sys.path.append('..')
 
 # import viewers and video writer
 from chap2.mav_viewer import mav_viewer
-from chap2.video_writer import video_writer
+from chap2.video_writer import VideoWriter
 
 # import parameters
 import parameters.simulation_parameters as SIM
@@ -23,7 +23,7 @@ state = msg_state()  # instantiate state message
 VIDEO = False  # True==write video, False==don't write video
 spacecraft_view = mav_viewer()
 if VIDEO == True:
-    video = video_writer(video_name="chap2_video.avi",
+    video = VideoWriter(video_name="chap2_video.avi",
                          bounding_box=(0, 0, 1000, 1000),
                          output_rate=SIM.ts_video)
 

@@ -12,7 +12,7 @@ import numpy as np
 import parameters.simulation_parameters as SIM
 
 from chap2.mav_viewer import mav_viewer
-from chap2.video_writer import video_writer
+from chap2.video_writer import VideoWriter
 from chap3.data_viewer import data_viewer
 from chap4.mav_dynamics import mav_dynamics
 from chap4.wind_simulation import wind_simulation
@@ -24,7 +24,7 @@ VIDEO = False  # True==write video, False==don't write video
 mav_view = mav_viewer()  # initialize the mav viewer
 data_view = data_viewer()  # initialize view of data plots
 if VIDEO == True:
-    video = video_writer(video_name="chap5_video.avi",
+    video = VideoWriter(video_name="chap5_video.avi",
                          bounding_box=(0, 0, 1000, 1000),
                          output_rate=SIM.ts_video)
 
