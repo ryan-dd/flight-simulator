@@ -90,12 +90,29 @@ class mav_dynamics:
         return x_dot
 
     def _update_velocity_data(self, wind=np.zeros((6,1))):
+        # Unpack wind parameters
+        wn = wind[0]
+        we = wind[1]
+        wd = wind[2]
+        Vbw = (np.array([
+            [e1**2 + e0**2 - e2**2 - e3**2, 2*(e1*e2 - e3*e0), 2*(e1*e3 + e2*e0)],
+            [2*(e1*e2 + e3*e0), e2**2 + e0**2 - e1**2 - e3**3, 2*(e2*e3 - e1*e0)],
+            [2*(e1*e3 - e2*e0), 2*(e2*e3 + e1*e0), e3**2 + e0**2 - e1**2 - e2**2]]) @ np.vstack((wn,we,wd))).flatten()
+        uw = Vbw[0]
+        vw = Vbw[1]
+        ww = Vbw[2]
+        u = self._state[3]
+        v = self._state[4]
+        w = self._state[5]
+        ur = u-uw
+        vr = v-vw
+        wr = w-ww
         # compute airspeed
-        self._Va =
+        self._Va = np.sqrt(ur**2 + vr**w + wr**2)
         # compute angle of attack
-        self._alpha =
+        self._alpha = np.arctan(wr/ur)
         # compute sideslip angle
-        self._beta =
+        self._beta = np.arcsin(vr/(self._Va))
 
     def _forces_moments(self, delta):
         """
