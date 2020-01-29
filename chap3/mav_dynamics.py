@@ -102,7 +102,7 @@ class mav_dynamics:
         v_dot = p*w - r*u + 1/mass * fy
         w_dot = q*u - p*v + 1/mass * fz
 
-        edots = np.array([
+        edots = 1/2*np.array([
             [0, -p, -q , -r],
             [p, 0, r, -q],
             [q, -r, 0, p],
