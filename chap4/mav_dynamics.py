@@ -92,9 +92,6 @@ class mav_dynamics:
         for the dynamics xdot = f(x, u), returns f(x, u)
         """
         # extract the states
-        pn = state.item(0)
-        pe = state.item(1)
-        pd = state.item(2)
         u = state.item(3)
         v = state.item(4)
         w = state.item(5)
@@ -180,7 +177,7 @@ class mav_dynamics:
         # compute airspeed
         self._Va = np.sqrt(ur**2 + vr**2 + wr**2)
         # compute angle of attack
-        self._alpha = np.arctan(wr/ur).item(0)
+        self._alpha = np.arctan2(wr, ur).item(0)
         # compute sideslip angle
         self._beta = np.arcsin(vr/(self._Va)).item(0)
 
@@ -215,11 +212,14 @@ class mav_dynamics:
         ))
         # Calculate fa
         first = 1/2 * MAV.rho * self._Va**2 * MAV.S_wing
+        sigma_a = (1 + np.exp(-MAV.M*(alpha-MAV.alpha0)) + np.exp(MAV.M*(alpha+MAV.alpha0))) / (1 + np.exp(-MAV.M*(alpha-MAV.alpha0))*(1 + np.exp(MAV.M*(alpha+MAV.alpha0))))
+        C_L_alpha_f = (1 - sigma_a)*(MAV.C_L_0 + MAV.C_L_alpha*alpha) + sigma_a*(2*np.sign(alpha)*np.sin(alpha)**2*alpha*np.cos(alpha))
+        C_D_alpha_f = MAV.C_D_p + (MAV.C_L_0 + MAV.C_L_alpha*alpha)**2/(np.pi*MAV.e*MAV.AR)
         
-        C_X_alpha = -MAV.C_D_alpha*cos(alpha) + MAV.C_L_alpha*sin(alpha)
+        C_X_alpha = -C_D_alpha_f*cos(alpha) + C_L_alpha_f*sin(alpha)
         C_X_q_alpha = -MAV.C_D_q*cos(alpha) + MAV.C_L_q*sin(alpha)
         C_X_delta_e = -MAV.C_D_delta_e*cos(alpha) + MAV.C_L_delta_e*sin(alpha)
-        C_Z_alpha = -MAV.C_D_alpha*sin(alpha) - MAV.C_L_alpha*cos(alpha)
+        C_Z_alpha = -C_D_alpha_f*sin(alpha) - C_L_alpha_f*cos(alpha)
         C_Z_q = -MAV.C_D_q*sin(alpha) - MAV.C_L_q * cos(alpha)
         C_Z_delta_e = -MAV.C_D_delta_e*sin(alpha) - MAV.C_L_delta_e*cos(alpha)
 
@@ -273,19 +273,19 @@ class mav_dynamics:
         self.msg_true_state.Va = self._Va
         self.msg_true_state.alpha = self._alpha
         self.msg_true_state.beta = self._beta
-        self.msg_true_state.phi = phi
-        self.msg_true_state.theta = theta
-        self.msg_true_state.psi = psi
+        self.msg_true_state.phi = phi.item(0)
+        self.msg_true_state.theta = theta.item(0)
+        self.msg_true_state.psi = psi.item(0)
         u = self._state[0]
         v = self._state[1]
         w = self._state[2]
-        Vg = np.sqrt(u**2 + v**2 + w**2)
+        Vg = np.sqrt(u**2 + v**2 + w**2).item(0)
         self.msg_true_state.Vg = Vg
         gamma_wt = np.arcsin(-w/Vg)
-        self.msg_true_state.gamma = gamma_wt
-        self.msg_true_state.chi = np.arctan2(v, u)
-        self.msg_true_state.p = self._state[10]
-        self.msg_true_state.q = self._state[11]
-        self.msg_true_state.r = self._state[12]
+        self.msg_true_state.gamma = gamma_wt.item(0)
+        self.msg_true_state.chi = np.arctan2(v, u).item(0)
+        self.msg_true_state.p = self._state[10].item(0)
+        self.msg_true_state.q = self._state[11].item(0)
+        self.msg_true_state.r = self._state[12].item(0)
         self.msg_true_state.wn = self._wind.item(0)
         self.msg_true_state.we = self._wind.item(1)
