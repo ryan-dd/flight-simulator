@@ -123,7 +123,7 @@ class mav_dynamics:
         u_dot = (r*v - q*w + 1/MAV.mass * fx)
         v_dot = (p*w - r*u + 1/MAV.mass * fy)
         w_dot = (q*u - p*v + 1/MAV.mass * fz)
-        edots = np.array([
+        edots = 1/2*np.array([
             [0, -p, -q , -r],
             [p, 0, r, -q],
             [q, -r, 0, p],
@@ -205,7 +205,7 @@ class mav_dynamics:
         beta = self._beta
         Va = self._Va
         # Calculate fg
-        fg = -MAV.mass*MAV.gravity*np.vstack((
+        fg = MAV.mass*MAV.gravity*np.vstack((
             (2*(e1*e3 - e2*e0), 
             2*(e2*e3 + e1*e0), 
             e3**2 + e0**2 - e1**2 - e2**2)
@@ -234,7 +234,8 @@ class mav_dynamics:
         V_in = MAV.V_max*delta_t
         # Quadratic formula to solve for motor speed
         a_part = MAV.C_Q0 * MAV.rho * np.power(MAV.D_prop, 5)/((2.*np.pi)**2)
-        b_part = (MAV.C_Q1 * MAV.rho * np.power(MAV.D_prop, 4)/ (2.*np.pi))*self._Va + MAV.KQ**2/MAV.R_motor
+        b_part = (MAV.C_Q1 * MAV.rho * np.power(MAV.D_prop, 4)
+        / (2.*np.pi))*self._Va + MAV.KQ**2/MAV.R_motor
         c_part = MAV.C_Q2 * MAV.rho * np.power(MAV.D_prop, 3)*self._Va**2 - (MAV.KQ/MAV.R_motor)*V_in + MAV.KQ * MAV.i0
         # Consider only positive root
         Omega_op = (-b_part + np.sqrt(b_part**2 - 4*a_part*c_part))/(2.*a_part)
@@ -251,12 +252,15 @@ class mav_dynamics:
         fy = f[1][0]
         fz = f[2][0]
 
-        Mx = MAV.b*(MAV.C_ell_0 + MAV.C_ell_beta*beta + MAV.C_ell_p * MAV.b/(2*Va)*p + MAV.C_ell_r*MAV.b/(2*Va) + MAV.C_ell_delta_a*delta_a + MAV.C_ell_delta_r*delta_r)
+        Mx = MAV.b*(MAV.C_ell_0 + MAV.C_ell_beta*beta + MAV.C_ell_p * MAV.b/(2*Va)*p + MAV.C_ell_r*MAV.b/(2*Va)*r + MAV.C_ell_delta_a*delta_a + MAV.C_ell_delta_r*delta_r)
         My = MAV.c*(MAV.C_m_0 + MAV.C_m_alpha*alpha + MAV.C_m_q*MAV.c/(2*Va)*q + MAV.C_m_delta_e*delta_e)
         Mz = MAV.b*(MAV.C_n_0 + MAV.C_n_beta*beta + MAV.C_n_p*MAV.b/(2*Va)*p + MAV.C_n_r*MAV.b/(2*Va)*r + MAV.C_n_delta_a*delta_a + MAV.C_n_delta_r*delta_r)
         
+        Mx = Mx*first
+        My = My*first
+        Mz = Mz*first
         fx += MAV.rho*n_input**2*np.power(MAV.D_prop, 4)*C_T
-        Mx += MAV.rho*n_input**2*np.power(MAV.D_prop, 5)*C_Q
+        Mx += -MAV.rho*n_input**2*np.power(MAV.D_prop, 5)*C_Q
 
         self._forces[0] = fx
         self._forces[1] = fy

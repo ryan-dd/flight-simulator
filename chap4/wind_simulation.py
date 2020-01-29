@@ -11,7 +11,7 @@ import numpy as np
 class wind_simulation:
     def __init__(self, Ts):
         # steady state wind defined in the inertial frame
-        self._steady_state = np.array([[0],[0],[0]])
+        self._steady_state = np.array([[0],[5],[0]])
         Va = 25
         Lu = 200
         Lv = 200
@@ -50,6 +50,9 @@ class wind_simulation:
         gust = np.array([[self.u_w.update(np.random.randn())],
                          [self.v_w.update(np.random.randn())],
                          [self.w_w.update(np.random.randn())]])
-        #gust = np.array([[0.],[0.],[0.]])
+        # gust = np.array([[self.u_w.update(0)],
+        #                  [self.v_w.update(0)],
+        #                  [self.w_w.update(0)]])
+        # gust = np.array([[0.],[0.],[0.]])
         return np.concatenate(( self._steady_state, gust ))
 
