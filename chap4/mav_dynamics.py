@@ -87,6 +87,64 @@ class mav_dynamics:
     ###################################
     # private functions
     def _derivatives(self, state, forces_moments):
+        """
+        for the dynamics xdot = f(x, u), returns f(x, u)
+        """
+        # extract the states
+        pn = state.item(0)
+        pe = state.item(1)
+        pd = state.item(2)
+        u = state.item(3)
+        v = state.item(4)
+        w = state.item(5)
+        e0 = state.item(6)
+        e1 = state.item(7)
+        e2 = state.item(8)
+        e3 = state.item(9)
+        p = state.item(10)
+        q = state.item(11)
+        r = state.item(12)
+        #   extract forces/moments
+        fx = forces_moments.item(0)
+        fy = forces_moments.item(1)
+        fz = forces_moments.item(2)
+        l = forces_moments.item(3)
+        m = forces_moments.item(4)
+        n = forces_moments.item(5)
+
+        pddots = (np.array([
+            [e1**2 + e0**2 - e2**2 - e3**2, 2*(e1*e2 - e3*e0), 2*(e1*e3 + e2*e0)],
+            [2*(e1*e2 + e3*e0), e2**2 + e0**2 - e1**2 - e3**3, 2*(e2*e3 - e1*e0)],
+            [2*(e1*e3 - e2*e0), 2*(e2*e3 + e1*e0), e3**2 + e0**2 - e1**2 - e2**2]]) @ np.vstack((u,v,w))).flatten()
+        # position kinematics
+        pn_dot = pddots[0]
+        pe_dot = pddots[1]
+        pd_dot = pddots[2]
+
+        # position dynamics
+        u_dot = r*v - q*w + 1/mass * fx
+        v_dot = p*w - r*u + 1/mass * fy
+        w_dot = q*u - p*v + 1/mass * fz
+
+        edots = np.array([
+            [0, -p, -q , -r],
+            [p, 0, r, -q],
+            [q, -r, 0, p],
+            [r, q, -p, 0]]) @ np.vstack((e0, e1, e2, e3)).flatten()
+        # rotational kinematics
+        e0_dot = edots[0]
+        e1_dot = edots[1]
+        e2_dot = edots[2]
+        e3_dot = edots[3]
+
+        # rotatonal dynamics
+        p_dot = gamma1*p*q-gamma2*q*r + gamma3*l+gamma4*n
+        q_dot = gamma5*p*r - gamma6*(p**2 - r**2) + 1/Jy*m
+        r_dot = gamma7*p*q - gamma1*q*r + gamma4*l+gamma8*n 
+
+        # collect the derivative of the states
+        x_dot = np.array([[pn_dot, pe_dot, pd_dot, u_dot, v_dot, w_dot,
+                           e0_dot, e1_dot, e2_dot, e3_dot, p_dot, q_dot, r_dot]]).T
         return x_dot
 
     def _update_velocity_data(self, wind=np.zeros((6,1))):
@@ -94,13 +152,24 @@ class mav_dynamics:
         wn = wind[0]
         we = wind[1]
         wd = wind[2]
+        w_u = wind[3]
+        w_v = wind[4]
+        w_w = wind[5]
+        e0 = self._state.item(6)
+        e1 = self._state.item(7)
+        e2 = self._state.item(8)
+        e3 = self._state.item(9)
         Vbw = (np.array([
             [e1**2 + e0**2 - e2**2 - e3**2, 2*(e1*e2 - e3*e0), 2*(e1*e3 + e2*e0)],
             [2*(e1*e2 + e3*e0), e2**2 + e0**2 - e1**2 - e3**3, 2*(e2*e3 - e1*e0)],
             [2*(e1*e3 - e2*e0), 2*(e2*e3 + e1*e0), e3**2 + e0**2 - e1**2 - e2**2]]) @ np.vstack((wn,we,wd))).flatten()
-        uw = Vbw[0]
-        vw = Vbw[1]
-        ww = Vbw[2]
+        total_wind = Vbw + np.array([w_u,w_v,w_w])
+        uw = total_wind[0]
+        vw = total_wind[1]
+        ww = total_wind[2]
+        self._wind[0][0] = uw
+        self._wind[1][0] = vw
+        self._wind[2][0] = ww
         u = self._state[3]
         v = self._state[4]
         w = self._state[5]
