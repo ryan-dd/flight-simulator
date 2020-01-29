@@ -11,7 +11,7 @@ import numpy as np
 # load message types
 from message_types.msg_state import msg_state
 
-import parameters.aerosonde_parameters as MAV
+from parameters.aerosonde_parameters as MAV
 from tools.tools import Quaternion2Rotation, Quaternion2Euler
 
 class mav_dynamics:
@@ -138,9 +138,9 @@ class mav_dynamics:
         e3_dot = edots[3]
 
         # rotatonal dynamics
-        p_dot = gamma1*p*q-gamma2*q*r + gamma3*l+gamma4*n
-        q_dot = gamma5*p*r - gamma6*(p**2 - r**2) + 1/Jy*m
-        r_dot = gamma7*p*q - gamma1*q*r + gamma4*l+gamma8*n 
+        p_dot = MAV.gamma1*p*q - MAV.gamma2*q*r + MAV.gamma3*l+MAV.gamma4*n
+        q_dot = MAV.gamma5*p*r - MAV.gamma6*(p**2 - r**2) + 1/Jy*m
+        r_dot = MAV.gamma7*p*q - MAV.gamma1*q*r + MAV.gamma4*l+MAV.gamma8*n 
 
         # collect the derivative of the states
         x_dot = np.array([[pn_dot, pe_dot, pd_dot, u_dot, v_dot, w_dot,
@@ -189,6 +189,19 @@ class mav_dynamics:
         :param delta: np.matrix(delta_a, delta_e, delta_r, delta_t)
         :return: Forces and Moments on the UAV np.matrix(Fx, Fy, Fz, Ml, Mn, Mm)
         """
+
+        fg = -MAV.mass*MAV.gravity*np.vstack((
+            (2*(e1*e3 - e2*e0), 
+            2*(e2*e3 + e1*e0), 
+            e3**2 + e0**2 - e1**2 - e2**2)
+        ))
+        c = 1/2*MAV.rho*self._Va*MAV.S_wing
+        CX_alpha = -MAV.C_D_alpha*cos(alpha) + MAV.C_L_alpha*sin(alpha)
+        CX_q_alpha = -C_D_q*cos(alpha) + C_L_q*sin(alpha)
+        CX_delta_e = -C_D_delta_e*cos(alpha) +C_L_delta_e*sin(alpha)
+        CZ_alpha = -MAV.C_D_alpha*sin(alpha) - MAV.C_L_alpha*sin(alpha)
+        CZ_q = -C_D_q * sin(alpha) - C_L_q * cos(alpha)
+        C_Z_delta_e = -C_D_delta_e * sin(alpha) - C_L_delta_e*cos(alpha)
         self._forces[0] = fx
         self._forces[1] = fy
         self._forces[2] = fz
@@ -207,11 +220,16 @@ class mav_dynamics:
         self.msg_true_state.phi = phi
         self.msg_true_state.theta = theta
         self.msg_true_state.psi = psi
-        self.msg_true_state.Vg =
-        self.msg_true_state.gamma =
-        self.msg_true_state.chi =
-        self.msg_true_state.p = self._state.item(10)
-        self.msg_true_state.q = self._state.item(11)
-        self.msg_true_state.r = self._state.item(12)
+        u = self._state[0]
+        v = self._state[1]
+        w = self._state[2]
+        Vg = np.sqrt(u**2 + v**2 + w**2)
+        self.msg_true_state.Vg = Vg
+        gamma_wt = np.arcsin(-w/Vg)
+        self.msg_true_state.gamma = gamma_wt
+        self.msg_true_state.chi = np.arctan2(v, u)
+        self.msg_true_state.p = self._state[10]
+        self.msg_true_state.q = self._state.item[11]
+        self.msg_true_state.r = self._state.item[12]
         self.msg_true_state.wn = self._wind.item(0)
         self.msg_true_state.we = self._wind.item(1)
