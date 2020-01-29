@@ -195,13 +195,18 @@ class mav_dynamics:
             2*(e2*e3 + e1*e0), 
             e3**2 + e0**2 - e1**2 - e2**2)
         ))
-        c = 1/2*MAV.rho*self._Va*MAV.S_wing
+        first = 1/2*MAV.rho*self._Va*MAV.S_wing
+
         CX_alpha = -MAV.C_D_alpha*cos(alpha) + MAV.C_L_alpha*sin(alpha)
         CX_q_alpha = -C_D_q*cos(alpha) + C_L_q*sin(alpha)
         CX_delta_e = -C_D_delta_e*cos(alpha) +C_L_delta_e*sin(alpha)
         CZ_alpha = -MAV.C_D_alpha*sin(alpha) - MAV.C_L_alpha*sin(alpha)
         CZ_q = -C_D_q * sin(alpha) - C_L_q * cos(alpha)
         C_Z_delta_e = -C_D_delta_e * sin(alpha) - C_L_delta_e*cos(alpha)
+
+        fx_i = Cx_alpha + CX_q*c/(2*Va)*q + CX_delta_e*delta_e
+        fy_i = CY
+
         self._forces[0] = fx
         self._forces[1] = fy
         self._forces[2] = fz
