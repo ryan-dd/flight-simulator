@@ -35,12 +35,77 @@ sim_time = SIM.start_time
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
     #-------vary forces and moments to check dynamics-------------
-    fx = 10
-    fy = 0 # 10
-    fz = 0 # 10
-    Mx = 0 # 0.1
-    My = 0 # 0.1
-    Mz = 0 # 0.1
+    if sim_time < 5:
+        fx = 10
+        fy = 0 # 10
+        fz = 0 # 10
+        Mx = 0 # 0.1
+        My = 0 # 0.1
+        Mz = 0 # 0.1
+    elif sim_time < 10:
+        fx = -20
+        fy = 40 # 10
+        fz = 0 # 10
+        Mx = 0 # 0.1
+        My = 0 # 0.1
+        Mz = 0 # 0.1
+    elif sim_time < 15:
+        fx = 0
+        fy = -40 # 10
+        fz = 30 # 10
+        Mx = 0 # 0.1
+        My = 0 # 0.1
+        Mz = 0 # 0.1
+    elif sim_time < 20:
+        fx = 0
+        fy = 0 # 10
+        fz = 0 # 10
+        Mx = 0.1 # 0.1
+        My = 0 # 0.1
+        Mz = 0 # 0.1
+    elif sim_time < 25:
+        fx = 0
+        fy = 0 # 10
+        fz = 0 # 10
+        Mx = 0 # 0.1
+        My = 0.3 # 0.1
+        Mz = 0 # 0.1
+    elif sim_time < 30:
+        fx = 0
+        fy = 0 # 10
+        fz = 0 # 10
+        Mx = 0 # 0.1
+        My = 0 # 0.1
+        Mz = 0.4# 0.1
+    elif sim_time < 35:
+        fx = 10
+        fy = 0 # 10
+        fz = 0 # 10
+        Mx = 0.4 # 0.1
+        My = 0 # 0.1
+        Mz = 0 # 0.1
+    elif sim_time < 40:
+        fx = 0
+        fy = 10 # 10
+        fz = 0 # 10
+        Mx = 0 # 0.1
+        My = 0.3 # 0.1
+        Mz = 0 # 0.1
+    elif sim_time < 45:
+        fx = 0
+        fy = 0 # 10
+        fz = 0 # 10
+        Mx = 0 # 0.1
+        My = 0 # 0.1
+        Mz = 0.1 # 0.1
+    elif sim_time < 50:
+        fx = -30
+        fy = -30 # 10
+        fz = -30 # 10
+        Mx = 0.1 # 0.1
+        My = 0.1 # 0.1
+        Mz = 0.1 # 0.1
+
     forces_moments = np.array([[fx, fy, fz, Mx, My, Mz]]).T
 
     #-------physical system-------------
