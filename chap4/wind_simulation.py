@@ -11,8 +11,27 @@ import numpy as np
 class wind_simulation:
     def __init__(self, Ts):
         # steady state wind defined in the inertial frame
-        self._steady_state =
+        self._steady_state = np.array([[0],[0],[0]])
+        Va = 25
+        Lu = 200
+        Lv = 200
+        Lw = 50
+        include_gust = True 
+        if include_gust:
+            sigma_u = 1.06
+            sigma_v = 1.06
+            sigma_w = 0.7
 
+        a1 = sigma_u*np.sqrt(Va/Lu)
+        b1 = Va/Lu
+        
+        a2 = sigma_v*np.sqrt(3*Va/Lv)
+        a3 = a2*Va/(np.sqrt(3)*Lv)
+        b2 = Va/Lv
+
+        a4 = sigma_w*np.sqrt(3*Va/Lw)
+        a5 = a4*Va/(np.sqrt(3)*Lw)
+        b3 = Va/Lw
         self.u_w = transfer_function(num=np.array([[a1]]),
                                      den=np.array([[1, b1]]),
                                      Ts=Ts)
