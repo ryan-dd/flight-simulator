@@ -12,8 +12,10 @@ from tools.tools import Euler2Quaternion
 
 def compute_trim(mav, Va, gamma):
     # define initial state and input
-    state0 =
-    delta0 =
+    e = Euler2Quaternion(0, gamma, 0)
+    state = mav._state
+    state0 = np.vstack((state[0], state[1], state[2], mav._Va, 0, 0, e[0], e[1], e[2], e[3], 0, 0, 0))
+    delta0 = np.vstack((0, 0, 0, 0.5))
     x0 = np.concatenate((state0, delta0), axis=0)
     # define equality constraints
     cons = ({'type': 'eq',
@@ -48,5 +50,14 @@ def compute_trim(mav, Va, gamma):
 
 # objective function to be minimized
 def trim_objective(x, mav, Va, gamma):
-  return J
+    state_vars = x[0:13]
+    delta_vars = x[14:17]
+    mav._state = state_vars
+    mav._update_velocity_data()
+    forces_moments = mav._forces_moments(delta_vars)
+    f = mav._derivatives(mav._state, forces_moments)
+    xdotdesired =  np.vstack((0,0, Va*np.sin(gamma),0,0,0,0,0,0,0,0,0,0))
+    result = f - xdotdesired
+    J = np.linalg.norm(result[2:13])**2
+    return J
 
