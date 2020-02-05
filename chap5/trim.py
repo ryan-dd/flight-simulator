@@ -56,7 +56,7 @@ def trim_objective(x, mav, Va, gamma):
     mav._update_velocity_data()
     forces_moments = mav._forces_moments(delta_vars)
     f = mav._derivatives(mav._state, forces_moments)
-    xdotdesired =  np.vstack((0,0, Va*np.sin(gamma),0,0,0,0,0,0,0,0,0,0))
+    xdotdesired =  np.vstack((0,0, -Va*np.sin(gamma),0,0,0,0,0,0,0,0,0,0))
     result = f - xdotdesired
     J = np.linalg.norm(result[2:13])**2
     return J
