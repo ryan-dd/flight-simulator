@@ -111,7 +111,8 @@ def compute_ss_model(mav, trim_state, trim_input):
     C_Z_alpha = -C_D_alpha_f*sin(alpha) - C_L_alpha_f*cos(alpha)
     C_Z_q = -MAV.C_D_q*sin(alpha) - MAV.C_L_q * cos(alpha)
     C_Z_delta_e = -MAV.C_D_delta_e*sin(alpha) - MAV.C_L_delta_e*cos(alpha)
-    Xu = ustar*MAV.rho*MAV.S_wing/(MAV.mass)*(MAV.C_)
+    Xu = ustar*MAV.rho*MAV.S_wing/(MAV.mass)*(C_X_alpha*alpha_star + MAV.C_X_delta_e*delta_e_star) - MAV.rho*MAV.S_wing*wstar*C_X_alpha/(2*MAV.mass) + MAV.rho*MAV.S_wing*MAV.c*C_X_q*ustar*qstar/(4*MAV.mass*Vastar) - MAV.rho*MAV.S_prop*MAV.C_prop*ustar/(MAV.mass)
+    Xw = -qstar + wstar*MAV.rho*MAV.S_wing/(MAV.mass)*(C_X_q_alpha*alpha_star+C_X_delta_e*delta_e_star) + MAV.rho*MAV.S_wing*MAV.c*C_X_q*wstar*qstar/(4*MAV.mass*Vastar) + MAV.rho*MAV.S_wing*ustar*C_X_alpha/(2*MAV.mass) - MAV.rho*MAV.S_prop*MAV.C_prop*wstar/(MAV.mass)
     return A_lon, B_lon, A_lat, B_lat
 
 def euler_state(x_quat):
