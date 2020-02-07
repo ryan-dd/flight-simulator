@@ -63,6 +63,7 @@ def compute_ss_model(mav, trim_state, trim_input):
     delta_t_star = trim_input[1].item(0) 
     delta_a_star = trim_input[2].item(0) 
     delta_r_star = trim_input[3].item(0)
+    alpha_star = 0
     betastar = 0
     Vastar = ustar
     Yv = MAV.rho*MAV.S_wing*MAV.b*vstar/(4*MAV.mass*Vastar)*(MAV.C_Y_p*pstar + MAV.C_Y_r*rstar) + MAV.rho* MAV.S_wing*vstar/(MAV.mass) * (
@@ -105,43 +106,70 @@ def compute_ss_model(mav, trim_state, trim_input):
     C_D_alpha_f = MAV.C_D_p + (MAV.C_L_0 + MAV.C_L_alpha*alpha)**2/(np.pi*MAV.e*MAV.AR)
     
     
+    C_X_q = 0
     C_X_alpha = -C_D_alpha_f*cos(alpha) + C_L_alpha_f*sin(alpha)
     C_X_q_alpha = -MAV.C_D_q*cos(alpha) + MAV.C_L_q*sin(alpha)
     C_X_delta_e = -MAV.C_D_delta_e*cos(alpha) + MAV.C_L_delta_e*sin(alpha)
+    C_Z_0 = 0
     C_Z_alpha = -C_D_alpha_f*sin(alpha) - C_L_alpha_f*cos(alpha)
     C_Z_q = -MAV.C_D_q*sin(alpha) - MAV.C_L_q * cos(alpha)
     C_Z_delta_e = -MAV.C_D_delta_e*sin(alpha) - MAV.C_L_delta_e*cos(alpha)
     Xu = ustar*MAV.rho*MAV.S_wing/(MAV.mass)*(C_X_alpha*alpha_star + MAV.C_X_delta_e*delta_e_star) - MAV.rho*MAV.S_wing*wstar*C_X_alpha/(2*MAV.mass) + MAV.rho*MAV.S_wing*MAV.c*C_X_q*ustar*qstar/(4*MAV.mass*Vastar) - MAV.rho*MAV.S_prop*MAV.C_prop*ustar/(MAV.mass)
     Xw = -qstar + wstar*MAV.rho*MAV.S_wing/(MAV.mass)*(C_X_q_alpha*alpha_star+C_X_delta_e*delta_e_star) + MAV.rho*MAV.S_wing*MAV.c*C_X_q*wstar*qstar/(4*MAV.mass*Vastar) + MAV.rho*MAV.S_wing*ustar*C_X_alpha/(2*MAV.mass) - MAV.rho*MAV.S_prop*MAV.C_prop*wstar/(MAV.mass)
+    Xq = -wstar + MAV.rho*Vastar * MAV.S_wing*C_X_q*MAV.c/(4*MAV.mass)
+    X_delta_e = MAV.rho*MAV.Vastar**2*MAV.S_wing*C_X_delta_e/(2*MAV.mass)
+    X_delta_t = MAV.rho*MAV.S_prop*MAV.C_prop*MAV.k_motor**2*delta_t_star/(MAV.mass)
+    Zu = qstar + ustar*MAV.rho*MAV.S_wing/(MAV.mass)*(C_Z_0+C_Z_alpha*alpha_star + C_Z_delta_e*delta_e_star) - MAV.rho*MAV.S_wing*C_Z_alpha*wstar/(2*MAV.mass) + ustar*MAV.rho*MAV.S_wing*C_Z_q*MAV.c*qstar/(4*MAV.mass*Vastar)
+    Zw = wstar*MAV.rho*MAV.S_wing/(MAV.mass)*(C_Z_0+C_Z_alpha*alpha_star + C_Z_delta_e*delta_e_star) + MAV.rho*MAV.S_wing*C_Z_alpha*ustar/(2*MAV.mass) + MAV.rho*wstar*MAV.S_wing*MAV.c*C_Z_q*qstar/(4*MAV.mass*Vastar)
+    Zq = ustar + MAV.rho*Vastar*MAV.S_wing*C_Z_q*MAV.c/(2*MAV.mass)
+    Z_delta_e = MAV.rho*MAV.Vastar**2*MAV.S_wing*C_Z_delta_e/(2*MAV.mass)
+    M_u = ustar*MAV.rho*MAV.S_wing*MAV.c/(MAV.Jy)*(MAV.C_m_0 + MAV.C_m_alpha*alpha_star + MAV.C_m_delta_e*delta_e_star) - MAV.rho*MAV.S_wing*MAV.c*MAV.C_m_alpha*wstar/(2*MAV.Jy) + MAV.rho*MAV.S_wing*MAV.c**2*MAV.C_m_q*qstar*ustar/(4*MAV.Jy*Vastar)
+    M_w = wstar*MAV.rho*MAV.S_wing*MAV.c/(MAV.Jy)*(MAV.C_m_0 + MAV.C_m_alpha*alpha_star + MAV.C_m_delta_e*delta_e_star) + MAV.rho*MAV.S_wing*MAV.c*MAV.C_m_alpha*ustar/(2*MAV.Jy) + MAV.rho*MAV.S_wing*MAV.c**2*MAV.C_m_q*qstar*wstar/(4*MAV.Jy*Vastar)
+    Mq = MAV.rho*Vastar*MAV.S_wing*MAV.c**2*MAV.C_m_q/(4*MAV.Jy)
+    M_delta_e = MAV.rho*Vastar**2*MAV.S_wing*MAV.c*MAV.C_m_delta_e/(2*MAV.Jy)
+
+    A_lon = np.array([
+        [Xu, Xw, Xq, -MAV.gravity*np.cos(thetastar), 0],
+        [Zu, Zw, Zq, -MAV.gravity*np.sin(thetastar),0]
+        [0, 0, 1, 0, 0],
+        [np.sin(thetastar), -np.cos(thetastar), 0, ustar*cos(thetastar)+wstar*np.sin(thetastar), 0]
+    ])
+    B_lon = np.array([
+        [X_delta_e, X_delta_t],
+        [Z_delta_e, 0],
+        [M_delta_e, 0],
+        [0, 0],
+        [0, 0]
+    ])
     return A_lon, B_lon, A_lat, B_lat
 
-def euler_state(x_quat):
-    # convert state x with attitude represented by quaternion
-    # to x_euler with attitude represented by Euler angles
-     return x_euler
+# def euler_state(x_quat):
+#     # convert state x with attitude represented by quaternion
+#     # to x_euler with attitude represented by Euler angles
+#      return x_euler
 
-def quaternion_state(x_euler):
-    # convert state x_euler with attitude represented by Euler angles
-    # to x_quat with attitude represented by quaternions
-    return x_quat
+# def quaternion_state(x_euler):
+#     # convert state x_euler with attitude represented by Euler angles
+#     # to x_quat with attitude represented by quaternions
+#     return x_quat
 
-def f_euler(mav, x_euler, input):
-    # return 12x1 dynamics (as if state were Euler state)
-    # compute f at euler_state
-    return f_euler_
+# def f_euler(mav, x_euler, input):
+#     # return 12x1 dynamics (as if state were Euler state)
+#     # compute f at euler_state
+#     return f_euler_
 
-def df_dx(mav, x_euler, input):
-    # take partial of f_euler with respect to x_euler
-    return A
+# def df_dx(mav, x_euler, input):
+#     # take partial of f_euler with respect to x_euler
+#     return A
 
-def df_du(mav, x_euler, delta):
-    # take partial of f_euler with respect to delta
-    return B
+# def df_du(mav, x_euler, delta):
+#     # take partial of f_euler with respect to delta
+#     return B
 
-def dT_dVa(mav, Va, delta_t):
-    # returns the derivative of motor thrust with respect to Va
-    return dThrust
+# def dT_dVa(mav, Va, delta_t):
+#     # returns the derivative of motor thrust with respect to Va
+#     return dThrust
 
-def dT_ddelta_t(mav, Va, delta_t):
-    # returns the derivative of motor thrust with respect to delta_t
-    return dThrust
+# def dT_ddelta_t(mav, Va, delta_t):
+#     # returns the derivative of motor thrust with respect to delta_t
+#     return dThrust
