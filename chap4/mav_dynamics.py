@@ -168,9 +168,9 @@ class mav_dynamics:
         self._wind[0][0] = uw
         self._wind[1][0] = vw
         self._wind[2][0] = ww
-        u = self._state[3][0]
-        v = self._state[4][0]
-        w = self._state[5][0]
+        u = self._state.item(3)
+        v = self._state.item(4)
+        w = self._state.item(5)
         ur = u-uw
         vr = v-vw
         wr = w-ww
