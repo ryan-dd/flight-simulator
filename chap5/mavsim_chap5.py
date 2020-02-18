@@ -18,6 +18,7 @@ from chap4.mav_dynamics import mav_dynamics
 from chap4.wind_simulation import wind_simulation
 from chap5.trim import compute_trim
 from chap5.compute_models import compute_ss_model, compute_tf_model
+from tools.signals import Signals
 
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
@@ -38,19 +39,30 @@ gamma = 0.*np.pi/180.
 trim_state, trim_input = compute_trim(mav, Va, gamma)
 mav._state = trim_state  # set the initial state of the mav to the trim state
 delta = trim_input  # set input to constant constant trim input
-
+delta_ref = np.copy(delta)
 # # compute the state space model linearized about trim
-A_lon, B_lon, A_lat, B_lat = compute_ss_model(mav, trim_state, trim_input)
-T_phi_delta_a, T_chi_phi, T_theta_delta_e, T_h_theta, \
-T_h_Va, T_Va_delta_t, T_Va_theta, T_beta_delta_r \
-    = compute_tf_model(mav, trim_state, trim_input)
+#A_lon, B_lon, A_lat, B_lat = compute_ss_model(mav, trim_state, trim_input)
+# T_phi_delta_a, T_chi_phi, T_theta_delta_e, T_h_theta, \
+# T_h_Va, T_Va_delta_t, T_Va_theta, T_beta_delta_r \
+#     = compute_tf_model(mav, trim_state, trim_input)
 
 # initialize the simulation time
 sim_time = SIM.start_time
+doublet_a = Signals(amplitude=2, dc_offset=np.copy(delta[0]), start_time=0, duration=0.099)
 
 # main simulation loop
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
+    # Impulse on the elevator
+    # Impulse on aelerion or the rudder 
+    
+    delta[0] = doublet_a.doublet(sim_time)
+    
+    # if sim_time > 10 and sim_time < 10.02:
+    #     delta[0] = delta_ref[0]*2
+    # if sim_time > 10.06 and sim_time < 10.02:
+    #     delta[0] = delta_ref[0]
+
 
     #-------physical system-------------
     #current_wind = wind.update()  # get the new wind vector
@@ -71,7 +83,3 @@ while sim_time < SIM.end_time:
 
 if VIDEO == True:
     video.close()
-
-
-
-

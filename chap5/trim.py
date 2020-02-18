@@ -14,8 +14,8 @@ def compute_trim(mav, Va, gamma):
     # define initial state and input
     e = Euler2Quaternion(0, gamma, 0)
     state = mav._state
-    state0 = np.vstack((state[0], state[1], state[2], mav._Va, 0, 0, e[0], e[1], e[2], e[3], 0, 0, 0))
-    delta0 = np.vstack((0, 0, 0, 0.5))
+    state0 = np.vstack((state[0][0], state[1][0], state[2][0], mav._Va, 0, 0, e[0], e[1], e[2], e[3], 0, 0, 0))
+    delta0 = np.vstack((0, 0, 0, 0))
     x0 = np.concatenate((state0, delta0), axis=0)
     # define equality constraints
     cons = ({'type': 'eq',
@@ -45,19 +45,19 @@ def compute_trim(mav, Va, gamma):
                    constraints=cons, options={'ftol': 1e-10, 'disp': True})
     # extract trim state and input and return
     trim_state = np.array([res.x[0:13]]).T
+    trim_state[6:10] = trim_state[6:10]/np.linalg.norm(trim_state[6:10])
     trim_input = np.array([res.x[13:17]]).T
     return trim_state, trim_input
 
 # objective function to be minimized
 def trim_objective(x, mav, Va, gamma):
     state_vars = x[0:13]
-    delta_vars = x[14:17]
-    mav._state = state_vars
+    delta_vars = x[13:17]
+    mav._state = state_vars#np.asarray(state_vars)[:,None]
     mav._update_velocity_data()
     forces_moments = mav._forces_moments(delta_vars)
     f = mav._derivatives(mav._state, forces_moments)
-    xdotdesired =  np.vstack((0,0, -Va*np.sin(gamma),0,0,0,0,0,0,0,0,0,0))
-    result = f - xdotdesired
+    xdotdesired = np.vstack((0,0, -Va*np.sin(gamma), 0,0,0,0,0,0,0,0,0,0))
+    result = xdotdesired-f
     J = np.linalg.norm(result[2:13])**2
     return J
-

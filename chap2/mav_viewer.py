@@ -94,16 +94,17 @@ class mav_viewer():
             Points that define the spacecraft, and the colors of the triangular mesh
             Define the points on the aircraft following diagram in Figure C.3
         """
-        fuse_h = 2
-        fuse_w = 2
-        fuse_l1 = 4
-        fuse_l2 = 2
-        wing_l = 3
-        wing_w = 8
-        fuse_l3 = 8
-        tail_h = 2
-        tailwing_w = 4
-        tailwing_l = 2
+        scale = 4
+        fuse_h = 2/scale
+        fuse_w = 2/scale
+        fuse_l1 = 4/scale
+        fuse_l2 = 2/scale
+        wing_l = 3/scale
+        wing_w = 8/scale
+        fuse_l3 = 8/scale
+        tail_h = 2/scale
+        tailwing_w = 4/scale
+        tailwing_l = 2/scale
         #points are in North East Down coordinates
         points = np.array([[fuse_l1, 0, 0],  # point 1
                            [fuse_l2, fuse_w/2, fuse_h/2],  # point 2

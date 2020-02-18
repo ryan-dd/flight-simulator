@@ -20,7 +20,7 @@ def compute_tf_model(mav, trim_state, trim_input):
     aphi2 = 1/2*MAV.rho*mav._Va**2 * MAV.S_wing*MAV.b*MAV.C_p_delta_a
     T_phi_delta_a = TransferFunction(np.array([[aphi2]]), np.array([[1, aphi1, 0]]), Ts)
 
-    T_chi_phi = TransferFunction(np.array([[MAV.gravity/mav._Va]]), np.array([[1]]), Ts)
+    T_chi_phi = TransferFunction(np.array([[MAV.gravity/mav._Va]]), np.array([[1, 0]]), Ts)
 
     abeta1 = -MAV.rho*mav._Va*MAV.S_wing * MAV.C_Y_beta / (2*MAV.mass)
     abeta2 = MAV.rho*mav._Va*MAV.S_wing * MAV.C_Y_delta_r / (2*MAV.mass)
@@ -31,10 +31,10 @@ def compute_tf_model(mav, trim_state, trim_input):
     atheta3 = MAV.rho*mav._Va**2 * MAV.c*MAV.S_wing/(2*MAV.Jy) * MAV.C_m_delta_e
     T_theta_delta_e =TransferFunction(np.array([[atheta3]]), np.array([[1, atheta1, atheta2]]), Ts)
 
-    T_h_theta = TransferFunction(np.array([[mav._Va]]), np.array([[1]]), Ts)
+    T_h_theta = TransferFunction(np.array([[mav._Va]]), np.array([[1, 0]]), Ts)
 
     _, theta, _ = Quaternion2Euler(mav._state[5:9])
-    T_h_Va = TransferFunction(np.array([[theta]]), np.array([[1]]), Ts)
+    T_h_Va = TransferFunction(np.array([[theta]]), np.array([[1, 0]]), Ts)
 
 
     Va_star = trim_state[3]
@@ -43,6 +43,7 @@ def compute_tf_model(mav, trim_state, trim_input):
     delta_t_star = trim_input[1].item(0) 
 
     aV1 = MAV.rho*Va_star*MAV.S_wing/MAV.mass * (MAV.C_D_0 + MAV.C_D_alpha*alpha_star + MAV.C_D_delta_e * delta_e_star) + MAV.rho * MAV.S_prop/MAV.mass * MAV.C_prop*Va_star
+    aV1 = aV1.item(0)
     aV2 = MAV.rho * MAV.S_prop/MAV.mass * MAV.C_prop*MAV.k_motor**2*delta_t_star
     aV3 = MAV.gravity
     T_Va_delta_t = TransferFunction(np.array([[aV2]]), np.array([[1, aV1]]), Ts)
@@ -86,13 +87,13 @@ def compute_ss_model(mav, trim_state, trim_input):
     Nr = -MAV.gamma1*qstar + MAV.rho*Vastar*MAV.S_wing*MAV.b**2/4*MAV.C_r_r
     N_delta_a = MAV.rho*Vastar**2*MAV.S_wing*MAV.b/2*MAV.C_r_delta_a
     N_delta_r = MAV.rho*Vastar**2*MAV.S_wing*MAV.b/2*MAV.C_r_delta_r
-
+    sec = lambda a : 1/np.cos(a)
     A_lat = np.array([
         [Yv, Yp, Yr, MAV.gravity*np.cos(thetastar)*np.cos(phistar), 0],
         [Lv, Lp, Lr, 0, 0],
         [Nv, Np, Nr, 0, 0],
         [0, 1, np.cos(phistar)*np.tan(thetastar), qstar*np.cos(phistar)*np.tan(thetastar) - rstar*np.sin(phistar)*np.tan(thetastar), 0],
-        [0, 0, np.cos(phistar)*np.sec(thetastar), pstar*np.cos(phistar)*np.sec(thetastar) - rstar*np.sin(phistar)*np.sec(thetastar), 0]
+        [0, 0, np.cos(phistar)*sec(thetastar), pstar*np.cos(phistar)*sec(thetastar) - rstar*np.sin(phistar)*sec(thetastar), 0]
         ])
     B_lat = np.array([
         [Y_delta_a, Y_delta_r],
