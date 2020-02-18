@@ -56,7 +56,7 @@ while sim_time < SIM.end_time:
     # Impulse on the elevator
     # Impulse on aelerion or the rudder 
     
-    delta[0] = doublet_a.doublet(sim_time)
+    delta[0] = 0.2#doublet_a.doublet(sim_time)
     
     # if sim_time > 10 and sim_time < 10.02:
     #     delta[0] = delta_ref[0]*2
