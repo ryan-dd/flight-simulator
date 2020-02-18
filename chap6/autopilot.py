@@ -54,7 +54,7 @@ class autopilot:
         self.commanded_state = msg_state()
 
     def update(self, cmd, state):
-
+        chi_c =
         # lateral autopilot
         phi_c =
         delta_a =
@@ -75,11 +75,11 @@ class autopilot:
         self.commanded_state.chi = cmd.course_command
         return delta, self.commanded_state
 
-    def saturate(self, input, low_limit, up_limit):
-        if input <= low_limit:
+    def saturate(self, input_, low_limit, up_limit):
+        if input_ <= low_limit:
             output = low_limit
-        elif input >= up_limit:
+        elif input_ >= up_limit:
             output = up_limit
         else:
-            output = input
+            output = input_
         return output
