@@ -47,6 +47,9 @@ class pid_control:
         d_term = ydot*self.kd
         u = p_term + i_term + d_term
         u_sat = self._saturate(u)
+        if self.ki > 0.00001:
+            if not np.isclose(u, u_sat):
+                self.integrator += 1/self.ki*(self.limit-u)
         return u_sat
 
     def _saturate(self, u):
@@ -75,6 +78,9 @@ class pi_control:
         i_term = self.integrator*self.ki
         u = p_term + i_term
         u_sat = self._saturate(u)
+        if self.ki > 0.00001:
+            if not np.isclose(u, u_sat):
+                self.integrator += 1/self.ki*(self.limit-u)
         return u_sat
 
     def _saturate(self, u):
