@@ -23,9 +23,29 @@ class pid_control:
         self.a2 = 2.0 / (2.0 * sigma + Ts)
 
     def update(self, y_ref, y, reset_flag=False):
+        if reset_flag:
+            self.integrator = 0
+        error = y_ref - y
+        p_term = error*self.kp
+        self.integrator += (error - self.error_delay_1)*self.Ts/2
+        i_term = self.integrator*self.ki
+        d_term = self.a1*self.error_dot_delay_1 + self.a2*(error - self.error_delay_1)
+        self.error_dot_delay_1 = d_term
+        self.error_delay_1 = error
+        u = p_term + i_term + d_term
+        u_sat = self._saturate(u)
         return u_sat
 
     def update_with_rate(self, y_ref, y, ydot, reset_flag=False):
+        if reset_flag:
+            self.integrator = 0
+        error = y_ref - y
+        p_term = error*self.kp
+        self.integrator += (error + self.error_delay_1)*self.Ts/2
+        i_term = self.integrator*self.ki
+        d_term = ydot*self.kd
+        u = p_term + i_term + d_term
+        u_sat = self._saturate(u)
         return u_sat
 
     def _saturate(self, u):
@@ -48,6 +68,12 @@ class pi_control:
         self.error_delay_1 = 0.0
 
     def update(self, y_ref, y):
+        error = y_ref - y
+        p_term = error*self.kp
+        self.integrator += (error + self.error_delay_1)*self.Ts/2
+        i_term = self.integrator*self.ki
+        u = p_term + i_term
+        u_sat = self._saturate(u)
         return u_sat
 
     def _saturate(self, u):
@@ -69,6 +95,11 @@ class pd_control_with_rate:
         self.limit = limit
 
     def update(self, y_ref, y, ydot):
+        error = y_ref - y
+        p_term = error*self.kp
+        d_term = ydot*self.kd
+        u = p_term + d_term
+        u_sat = self._saturate(u)
         return u_sat
 
     def _saturate(self, u):
