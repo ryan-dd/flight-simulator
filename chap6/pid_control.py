@@ -29,8 +29,9 @@ class pid_control:
         p_term = error*self.kp
         self.integrator += (error - self.error_delay_1)*self.Ts/2
         i_term = self.integrator*self.ki
-        d_term = self.a1*self.error_dot_delay_1 + self.a2*(error - self.error_delay_1)
-        self.error_dot_delay_1 = d_term
+        error_dot = self.a1*self.error_dot_delay_1 + self.a2*(error - self.error_delay_1)
+        d_term = error_dot*self.kd
+        self.error_dot_delay_1 = error_dot
         self.error_delay_1 = error
         u = p_term + i_term + d_term
         u_sat = self._saturate(u)
