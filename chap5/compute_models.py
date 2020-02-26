@@ -3,174 +3,143 @@ compute_ss_model
     - Chapter 5 assignment for Beard & McLain, PUP, 2012
     - Update history:  
         2/4/2019 - RWB
+        2/24/2020 - RWB
 """
 import sys
 sys.path.append('..')
 import numpy as np
-from math import sin, cos, tan
 from scipy.optimize import minimize
-from tools.tools import Euler2Quaternion, Quaternion2Euler
+from tools.rotations import Euler2Quaternion, Quaternion2Euler
 from tools.transfer_function import TransferFunction
 import parameters.aerosonde_parameters as MAV
 from parameters.simulation_parameters import ts_simulation as Ts
 
+def compute_model(mav, trim_state, trim_input):
+    # A_lon, B_lon, A_lat, B_lat = compute_ss_model(mav, trim_state, trim_input)
+    Va_trim, alpha_trim, theta_trim, a_phi1, a_phi2, a_theta1, a_theta2, a_theta3, \
+    a_V1, a_V2, a_V3 = compute_tf_model(mav, trim_state, trim_input)
+
+    # write transfer function gains to file
+    file = open('model_coef.py', 'w')
+    file.write('import numpy as np\n')
+    file.write('x_trim = np.array([[%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f]]).T\n' %
+               (trim_state.item(0), trim_state.item(1), trim_state.item(2), trim_state.item(3),
+                trim_state.item(4), trim_state.item(5), trim_state.item(6), trim_state.item(7),
+                trim_state.item(8), trim_state.item(9), trim_state.item(10), trim_state.item(11),
+                trim_state.item(12)))
+    file.write('u_trim = np.array([[%f, %f, %f, %f]]).T\n' %
+               (trim_input.item(0), trim_input.item(1), trim_input.item(2), trim_input.item(3)))
+    file.write('Va_trim = %f\n' % Va_trim)
+    file.write('alpha_trim = %f\n' % alpha_trim)
+    file.write('theta_trim = %f\n' % theta_trim)
+    file.write('a_phi1 = %f\n' % a_phi1)
+    file.write('a_phi2 = %f\n' % a_phi2)
+    file.write('a_theta1 = %f\n' % a_theta1)
+    file.write('a_theta2 = %f\n' % a_theta2)
+    file.write('a_theta3 = %f\n' % a_theta3)
+    file.write('a_V1 = %f\n' % a_V1)
+    file.write('a_V2 = %f\n' % a_V2)
+    file.write('a_V3 = %f\n' % a_V3)
+    # file.write('A_lon = np.array([\n    [%f, %f, %f, %f, %f],\n    '
+    #            '[%f, %f, %f, %f, %f],\n    '
+    #            '[%f, %f, %f, %f, %f],\n    '
+    #            '[%f, %f, %f, %f, %f],\n    '
+    #            '[%f, %f, %f, %f, %f]])\n' %
+    # (A_lon[0][0], A_lon[0][1], A_lon[0][2], A_lon[0][3], A_lon[0][4],
+    #  A_lon[1][0], A_lon[1][1], A_lon[1][2], A_lon[1][3], A_lon[1][4],
+    #  A_lon[2][0], A_lon[2][1], A_lon[2][2], A_lon[2][3], A_lon[2][4],
+    #  A_lon[3][0], A_lon[3][1], A_lon[3][2], A_lon[3][3], A_lon[3][4],
+    #  A_lon[4][0], A_lon[4][1], A_lon[4][2], A_lon[4][3], A_lon[4][4]))
+    # file.write('B_lon = np.array([\n    [%f, %f],\n    '
+    #            '[%f, %f],\n    '
+    #            '[%f, %f],\n    '
+    #            '[%f, %f],\n    '
+    #            '[%f, %f]])\n' %
+    # (B_lon[0][0], B_lon[0][1],
+    #  B_lon[1][0], B_lon[1][1],
+    #  B_lon[2][0], B_lon[2][1],
+    #  B_lon[3][0], B_lon[3][1],
+    #  B_lon[4][0], B_lon[4][1],))
+    # file.write('A_lat = np.array([\n    [%f, %f, %f, %f, %f],\n    '
+    #            '[%f, %f, %f, %f, %f],\n    '
+    #            '[%f, %f, %f, %f, %f],\n    '
+    #            '[%f, %f, %f, %f, %f],\n    '
+    #            '[%f, %f, %f, %f, %f]])\n' %
+    # (A_lat[0][0], A_lat[0][1], A_lat[0][2], A_lat[0][3], A_lat[0][4],
+    #  A_lat[1][0], A_lat[1][1], A_lat[1][2], A_lat[1][3], A_lat[1][4],
+    #  A_lat[2][0], A_lat[2][1], A_lat[2][2], A_lat[2][3], A_lat[2][4],
+    #  A_lat[3][0], A_lat[3][1], A_lat[3][2], A_lat[3][3], A_lat[3][4],
+    #  A_lat[4][0], A_lat[4][1], A_lat[4][2], A_lat[4][3], A_lat[4][4]))
+    # file.write('B_lat = np.array([\n    [%f, %f],\n    '
+    #            '[%f, %f],\n    '
+    #            '[%f, %f],\n    '
+    #            '[%f, %f],\n    '
+    #            '[%f, %f]])\n' %
+    # (B_lat[0][0], B_lat[0][1],
+    #  B_lat[1][0], B_lat[1][1],
+    #  B_lat[2][0], B_lat[2][1],
+    #  B_lat[3][0], B_lat[3][1],
+    #  B_lat[4][0], B_lat[4][1],))
+    file.write('Ts = %f\n' % Ts)
+    file.close()
+
+
 def compute_tf_model(mav, trim_state, trim_input):
     # trim values
-    aphi1 = -1/2*MAV.rho*mav._Va**2 * MAV.S_wing*MAV.b*MAV.C_p_p * MAV.b/(2*mav._Va)
-    aphi2 = 1/2*MAV.rho*mav._Va**2 * MAV.S_wing*MAV.b*MAV.C_p_delta_a
-    T_phi_delta_a = TransferFunction(np.array([[aphi2]]), np.array([[1, aphi1, 0]]), Ts)
-
-    T_chi_phi = TransferFunction(np.array([[MAV.gravity/mav._Va]]), np.array([[1, 0]]), Ts)
-
-    abeta1 = -MAV.rho*mav._Va*MAV.S_wing * MAV.C_Y_beta / (2*MAV.mass)
-    abeta2 = MAV.rho*mav._Va*MAV.S_wing * MAV.C_Y_delta_r / (2*MAV.mass)
-    T_beta_delta_r = TransferFunction(np.array([[abeta2]]), np.array([[1, abeta1]]), Ts)
-
-    atheta1 = -MAV.rho*mav._Va**2 * MAV.c*MAV.S_wing/(2*MAV.Jy) * MAV.C_m_q * MAV.c/(2*mav._Va)
-    atheta2 = -MAV.rho*mav._Va**2 * MAV.c*MAV.S_wing/(2*MAV.Jy) * MAV.C_m_alpha
-    atheta3 = MAV.rho*mav._Va**2 * MAV.c*MAV.S_wing/(2*MAV.Jy) * MAV.C_m_delta_e
-    T_theta_delta_e =TransferFunction(np.array([[atheta3]]), np.array([[1, atheta1, atheta2]]), Ts)
-
-    T_h_theta = TransferFunction(np.array([[mav._Va]]), np.array([[1, 0]]), Ts)
-
-    _, theta, _ = Quaternion2Euler(mav._state[5:9])
-    T_h_Va = TransferFunction(np.array([[theta]]), np.array([[1, 0]]), Ts)
-
+    mav._state = trim_state
+    mav._update_velocity_data()
+    Va_trim = mav._Va
+    alpha_trim = mav._alpha
+    phi, theta_trim, psi = Quaternion2Euler(trim_state[6:10])
 
     Va_star = trim_state[3]
     alpha_star = MAV.alpha0
     delta_e_star = trim_input[0].item(0)
     delta_t_star = trim_input[1].item(0) 
 
-    aV1 = MAV.rho*Va_star*MAV.S_wing/MAV.mass * (MAV.C_D_0 + MAV.C_D_alpha*alpha_star + MAV.C_D_delta_e * delta_e_star) + MAV.rho * MAV.S_prop/MAV.mass * MAV.C_prop*Va_star
-    aV1 = aV1.item(0)
-    aV2 = MAV.rho * MAV.S_prop/MAV.mass * MAV.C_prop*MAV.k_motor**2*delta_t_star
-    aV3 = MAV.gravity
-    T_Va_delta_t = TransferFunction(np.array([[aV2]]), np.array([[1, aV1]]), Ts)
-    T_Va_theta = TransferFunction(np.array([[-aV3]]), np.array([[1, aV1]]), Ts)
+    # define transfer function constants
+    a_phi1 = -1/2*MAV.rho*mav._Va**2 * MAV.S_wing*MAV.b*MAV.C_p_p * MAV.b/(2*mav._Va)
+    a_phi2 = 1/2*MAV.rho*mav._Va**2 * MAV.S_wing*MAV.b*MAV.C_p_delta_a
+    a_theta1 = -MAV.rho*mav._Va**2 * MAV.c*MAV.S_wing/(2*MAV.Jy) * MAV.C_m_q * MAV.c/(2*mav._Va)
+    a_theta2 = -MAV.rho*mav._Va**2 * MAV.c*MAV.S_wing/(2*MAV.Jy) * MAV.C_m_alpha
+    a_theta3 = MAV.rho*mav._Va**2 * MAV.c*MAV.S_wing/(2*MAV.Jy) * MAV.C_m_delta_e
+    a_V1 = MAV.rho*Va_star*MAV.S_wing/MAV.mass * (MAV.C_D_0 + MAV.C_D_alpha*alpha_star + MAV.C_D_delta_e * delta_e_star) + MAV.rho * MAV.S_prop/MAV.mass * MAV.C_prop*Va_star
+    a_V1 = a_V1.item(0)
+    a_V2 = MAV.rho * MAV.S_prop/MAV.mass * MAV.C_prop*MAV.k_motor**2*delta_t_star
+    a_V3 = MAV.gravity
 
-    return T_phi_delta_a, T_chi_phi, T_theta_delta_e, T_h_theta, T_h_Va, T_Va_delta_t, T_Va_theta, T_beta_delta_r
+    return Va_trim, alpha_trim, theta_trim, a_phi1, a_phi2, a_theta1, a_theta2, a_theta3, a_V1, a_V2, a_V3
 
 def compute_ss_model(mav, trim_state, trim_input):
-    ustar = trim_state.item(3)
-    vstar = trim_state.item(4)
-    wstar = trim_state.item(5)
-    e = trim_state[5:9]
-    phistar, thetastar, psistar = Quaternion2Euler(e)
-    pstar = trim_state.item(10)
-    qstar = trim_state.item(11)
-    rstar = trim_state.item(12)
-    delta_e_star = trim_input[0].item(0)
-    delta_t_star = trim_input[1].item(0) 
-    delta_a_star = trim_input[2].item(0) 
-    delta_r_star = trim_input[3].item(0)
-    alpha_star = 0
-    betastar = 0
-    Vastar = ustar
-    Yv = MAV.rho*MAV.S_wing*MAV.b*vstar/(4*MAV.mass*Vastar)*(MAV.C_Y_p*pstar + MAV.C_Y_r*rstar) + MAV.rho* MAV.S_wing*vstar/(MAV.mass) * (
-        MAV.C_Y_0 + MAV.C_Y_beta*betastar + MAV.C_Y_delta_a*delta_a_star + MAV.C_Y_delta_r*rstar) + MAV.rho*MAV.S_wing*MAV.C_Y_beta/(2*MAV.mass)*np.sqrt(ustar**2 + wstar**2)
-    Yp = wstar + MAV.rho*Vastar*MAV.S_wing*MAV.b/(4*MAV.mass) * MAV.C_Y_p
-    Yr = -ustar + MAV.rho*Vastar*MAV.S_wing*MAV.b/(4*MAV.mass) * MAV.C_Y_r
-    Y_delta_a = MAV.rho*Vastar**2 * MAV.S_wing/(2*MAV.mass) * MAV.C_Y_delta_a
-    Y_delta_r = MAV.rho*Vastar**2 * MAV.S_wing/(2*MAV.mass) * MAV.C_Y_delta_r
-
-    Lv = MAV.rho*MAV.S_wing*MAV.b**2 * vstar/(4*Vastar)*(MAV.C_p_p*pstar + MAV.C_p_r*rstar) + MAV.rho*MAV.S_wing*MAV.b*vstar * (
-        MAV.C_p_0 + MAV.C_p_beta*betastar + MAV.C_p_delta_a*delta_a_star + MAV.C_p_delta_r*rstar) + MAV.rho*MAV.S_wing*MAV.b*MAV.C_p_beta/2*np.sqrt(ustar**2+wstar**2)
-    Lp = MAV.gamma1*qstar + MAV.rho*Vastar*MAV.S_wing*MAV.b**2/4*MAV.C_p_p
-    Lr = -MAV.gamma2*qstar + MAV.rho*Vastar*MAV.S_wing*MAV.b**2/4*MAV.C_p_r
-    L_delta_a = MAV.rho*Vastar**2*MAV.S_wing*MAV.b/2*MAV.C_p_delta_a
-    L_delta_r = MAV.rho*Vastar**2*MAV.S_wing*MAV.b/2*MAV.C_p_delta_r
-
-    Nv = MAV.rho*MAV.S_wing*MAV.b**2 * vstar/(4*Vastar)*(MAV.C_r_p*pstar + MAV.C_r_r*rstar) + MAV.rho*MAV.S_wing*MAV.b*vstar * (
-        MAV.C_r_0 + MAV.C_r_beta*betastar + MAV.C_r_delta_a*delta_a_star + MAV.C_r_delta_r*rstar) + MAV.rho*MAV.S_wing*MAV.b*MAV.C_r_beta/2*np.sqrt(ustar**2+wstar**2)
-    Np = MAV.gamma7*qstar + MAV.rho*Vastar*MAV.S_wing*MAV.b**2/4*MAV.C_r_p
-    Nr = -MAV.gamma1*qstar + MAV.rho*Vastar*MAV.S_wing*MAV.b**2/4*MAV.C_r_r
-    N_delta_a = MAV.rho*Vastar**2*MAV.S_wing*MAV.b/2*MAV.C_r_delta_a
-    N_delta_r = MAV.rho*Vastar**2*MAV.S_wing*MAV.b/2*MAV.C_r_delta_r
-    sec = lambda a : 1/np.cos(a)
-    A_lat = np.array([
-        [Yv, Yp, Yr, MAV.gravity*np.cos(thetastar)*np.cos(phistar), 0],
-        [Lv, Lp, Lr, 0, 0],
-        [Nv, Np, Nr, 0, 0],
-        [0, 1, np.cos(phistar)*np.tan(thetastar), qstar*np.cos(phistar)*np.tan(thetastar) - rstar*np.sin(phistar)*np.tan(thetastar), 0],
-        [0, 0, np.cos(phistar)*sec(thetastar), pstar*np.cos(phistar)*sec(thetastar) - rstar*np.sin(phistar)*sec(thetastar), 0]
-        ])
-    B_lat = np.array([
-        [Y_delta_a, Y_delta_r],
-        [L_delta_a, L_delta_r],
-        [N_delta_a, N_delta_r],
-        [0,0],
-        [0,0]])
-    # Longitudinal dynamics
-    sigma_a = (1 + np.exp(-MAV.M*(alpha-MAV.alpha0)) + np.exp(MAV.M*(alpha+MAV.alpha0))) / (1 + np.exp(-MAV.M*(alpha-MAV.alpha0))*(1 + np.exp(MAV.M*(alpha+MAV.alpha0))))
-    C_L_alpha_f = (1 - sigma_a)*(MAV.C_L_0 + MAV.C_L_alpha*alpha) + sigma_a*(2*np.sign(alpha)*np.sin(alpha)**2*alpha*np.cos(alpha))
-    C_D_alpha_f = MAV.C_D_p + (MAV.C_L_0 + MAV.C_L_alpha*alpha)**2/(np.pi*MAV.e*MAV.AR)
-    
-    
-    C_X_q = 0
-    C_X_alpha = -C_D_alpha_f*cos(alpha) + C_L_alpha_f*sin(alpha)
-    C_X_q_alpha = -MAV.C_D_q*cos(alpha) + MAV.C_L_q*sin(alpha)
-    C_X_delta_e = -MAV.C_D_delta_e*cos(alpha) + MAV.C_L_delta_e*sin(alpha)
-    C_Z_0 = 0
-    C_Z_alpha = -C_D_alpha_f*sin(alpha) - C_L_alpha_f*cos(alpha)
-    C_Z_q = -MAV.C_D_q*sin(alpha) - MAV.C_L_q * cos(alpha)
-    C_Z_delta_e = -MAV.C_D_delta_e*sin(alpha) - MAV.C_L_delta_e*cos(alpha)
-    Xu = ustar*MAV.rho*MAV.S_wing/(MAV.mass)*(C_X_alpha*alpha_star + MAV.C_X_delta_e*delta_e_star) - MAV.rho*MAV.S_wing*wstar*C_X_alpha/(2*MAV.mass) + MAV.rho*MAV.S_wing*MAV.c*C_X_q*ustar*qstar/(4*MAV.mass*Vastar) - MAV.rho*MAV.S_prop*MAV.C_prop*ustar/(MAV.mass)
-    Xw = -qstar + wstar*MAV.rho*MAV.S_wing/(MAV.mass)*(C_X_q_alpha*alpha_star+C_X_delta_e*delta_e_star) + MAV.rho*MAV.S_wing*MAV.c*C_X_q*wstar*qstar/(4*MAV.mass*Vastar) + MAV.rho*MAV.S_wing*ustar*C_X_alpha/(2*MAV.mass) - MAV.rho*MAV.S_prop*MAV.C_prop*wstar/(MAV.mass)
-    Xq = -wstar + MAV.rho*Vastar * MAV.S_wing*C_X_q*MAV.c/(4*MAV.mass)
-    X_delta_e = MAV.rho*MAV.Vastar**2*MAV.S_wing*C_X_delta_e/(2*MAV.mass)
-    X_delta_t = MAV.rho*MAV.S_prop*MAV.C_prop*MAV.k_motor**2*delta_t_star/(MAV.mass)
-    Zu = qstar + ustar*MAV.rho*MAV.S_wing/(MAV.mass)*(C_Z_0+C_Z_alpha*alpha_star + C_Z_delta_e*delta_e_star) - MAV.rho*MAV.S_wing*C_Z_alpha*wstar/(2*MAV.mass) + ustar*MAV.rho*MAV.S_wing*C_Z_q*MAV.c*qstar/(4*MAV.mass*Vastar)
-    Zw = wstar*MAV.rho*MAV.S_wing/(MAV.mass)*(C_Z_0+C_Z_alpha*alpha_star + C_Z_delta_e*delta_e_star) + MAV.rho*MAV.S_wing*C_Z_alpha*ustar/(2*MAV.mass) + MAV.rho*wstar*MAV.S_wing*MAV.c*C_Z_q*qstar/(4*MAV.mass*Vastar)
-    Zq = ustar + MAV.rho*Vastar*MAV.S_wing*C_Z_q*MAV.c/(2*MAV.mass)
-    Z_delta_e = MAV.rho*MAV.Vastar**2*MAV.S_wing*C_Z_delta_e/(2*MAV.mass)
-    M_u = ustar*MAV.rho*MAV.S_wing*MAV.c/(MAV.Jy)*(MAV.C_m_0 + MAV.C_m_alpha*alpha_star + MAV.C_m_delta_e*delta_e_star) - MAV.rho*MAV.S_wing*MAV.c*MAV.C_m_alpha*wstar/(2*MAV.Jy) + MAV.rho*MAV.S_wing*MAV.c**2*MAV.C_m_q*qstar*ustar/(4*MAV.Jy*Vastar)
-    M_w = wstar*MAV.rho*MAV.S_wing*MAV.c/(MAV.Jy)*(MAV.C_m_0 + MAV.C_m_alpha*alpha_star + MAV.C_m_delta_e*delta_e_star) + MAV.rho*MAV.S_wing*MAV.c*MAV.C_m_alpha*ustar/(2*MAV.Jy) + MAV.rho*MAV.S_wing*MAV.c**2*MAV.C_m_q*qstar*wstar/(4*MAV.Jy*Vastar)
-    Mq = MAV.rho*Vastar*MAV.S_wing*MAV.c**2*MAV.C_m_q/(4*MAV.Jy)
-    M_delta_e = MAV.rho*Vastar**2*MAV.S_wing*MAV.c*MAV.C_m_delta_e/(2*MAV.Jy)
-
-    A_lon = np.array([
-        [Xu, Xw, Xq, -MAV.gravity*np.cos(thetastar), 0],
-        [Zu, Zw, Zq, -MAV.gravity*np.sin(thetastar),0]
-        [0, 0, 1, 0, 0],
-        [np.sin(thetastar), -np.cos(thetastar), 0, ustar*cos(thetastar)+wstar*np.sin(thetastar), 0]
-    ])
-    B_lon = np.array([
-        [X_delta_e, X_delta_t],
-        [Z_delta_e, 0],
-        [M_delta_e, 0],
-        [0, 0],
-        [0, 0]
-    ])
+    x_euler = euler_state(trim_state)
     return A_lon, B_lon, A_lat, B_lat
 
-# def euler_state(x_quat):
-#     # convert state x with attitude represented by quaternion
-#     # to x_euler with attitude represented by Euler angles
-#      return x_euler
+def euler_state(x_quat):
+    # convert state x with attitude represented by quaternion
+    # to x_euler with attitude represented by Euler angles
+    return x_euler
 
-# def quaternion_state(x_euler):
-#     # convert state x_euler with attitude represented by Euler angles
-#     # to x_quat with attitude represented by quaternions
-#     return x_quat
+def quaternion_state(x_euler):
+    # convert state x_euler with attitude represented by Euler angles
+    # to x_quat with attitude represented by quaternions
+    return x_quat
 
-# def f_euler(mav, x_euler, input):
-#     # return 12x1 dynamics (as if state were Euler state)
-#     # compute f at euler_state
-#     return f_euler_
+def f_euler(mav, x_euler, input):
+    # return 12x1 dynamics (as if state were Euler state)
+    return f_euler_
 
-# def df_dx(mav, x_euler, input):
-#     # take partial of f_euler with respect to x_euler
-#     return A
+def df_dx(mav, x_euler, input):
+    # take partial of f_euler with respect to x_euler
+    return A
 
-# def df_du(mav, x_euler, delta):
-#     # take partial of f_euler with respect to delta
-#     return B
+def df_du(mav, x_euler, delta):
+    # take partial of f_euler with respect to delta
+    return B
 
-# def dT_dVa(mav, Va, delta_t):
-#     # returns the derivative of motor thrust with respect to Va
-#     return dThrust
+def dT_dVa(mav, Va, delta_t):
+    # returns the derivative of motor thrust with respect to Va
+    return (T_eps - T) / eps
 
-# def dT_ddelta_t(mav, Va, delta_t):
-#     # returns the derivative of motor thrust with respect to delta_t
-#     return dThrust
+def dT_ddelta_t(mav, Va, delta_t):
+    # returns the derivative of motor thrust with respect to delta_t
+    return (T_eps - T) / eps

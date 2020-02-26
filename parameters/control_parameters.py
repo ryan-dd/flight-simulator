@@ -1,66 +1,66 @@
 import sys
 sys.path.append('..')
 import numpy as np
-import chap6.transfer_function_coef as TF
-from chap5.trim import compute_trim
+import chap5.model_coef as TF
 import parameters.aerosonde_parameters as MAV
 
-Va = 25
-gamma = 0
+gravity = MAV.gravity  # gravity constant
+rho = MAV.rho  # density of air
+# sigma =1   # low pass filter gain for derivative
+Va0 = TF.Va_trim
+Va = Va0
+Vg = Va
+delta_a_max = np.radians(45)
+delta_e_max = np.radians(45)
 
 #----------roll loop-------------
-wn_roll = 10
-zeta_roll = 0.707
-delta_a_max = 30
-roll_e_max = 25
+# get transfer function data for delta_a to phi
+zeta_roll = 1.7
+roll_e_max = np.radians(40)
 
 roll_kp = delta_a_max / roll_e_max
-roll_kd = (2*zeta_roll*wn_roll - TF.aphi1)/(TF.aphi2)
+wn_roll = np.sqrt(np.abs(TF.a_phi2)*roll_kp)
+
+roll_kd = (2*zeta_roll*wn_roll - TF.a_phi1)/(TF.a_phi2)
 
 #----------course loop-------------
-Wx = 7
+Wx = 10
 wn_course = 1/Wx*wn_roll
-zeta_course = 2
+zeta_course = 3
 
-course_kp = 2*zeta_course*wn_course*Va/MAV.gravity
-course_ki = wn_course**2*Va/MAV.gravity
+course_kp = 2*zeta_course*wn_course*Vg/MAV.gravity
+course_ki = wn_course**2*Vg/MAV.gravity
 
 #----------sideslip loop-------------
 # How to tune emaxbeta?
-e_max_beta = 25
-zeta_beta = 0.707
-delta_r_max = 30
-
-sideslip_kp = delta_r_max/e_max_beta
-wn_beta = (TF.abeta1 + TF.abeta2*sideslip_kp)/2*zeta_beta
-
-sideslip_ki = wn_beta**2/TF.abeta2
+# e_max_beta = 40
+# zeta_beta = 0.707
+# delta_r_max = 30
 
 #----------yaw damper-------------
-# How do you tune this one??
-yaw_damper_tau_r = -1
-yaw_damper_kp = 0.5
+yaw_damper_tau_r = 0.05
+yaw_damper_kp = -0.05
 
 #----------pitch loop-------------
-delta_e_max = 30
-e_max_pitch = 25
-wn_pitch = delta_e_max/e_max_pitch
-zeta_pitch = 0.707
+e_max_pitch = np.radians(30)
+zeta_pitch = 3.0
 
-pitch_kp = (wn_pitch**2 - TF.atheta2)/TF.atheta3
-pitch_kd = (2*zeta_pitch*wn_pitch - TF.atheta1)/TF.atheta3
-K_theta_DC = (pitch_kp*TF.atheta3)/wn_pitch**2
+pitch_kp = delta_e_max/e_max_pitch*np.sign(TF.a_theta3)
+wn_pitch = np.sqrt(TF.a_theta2 + pitch_kp*TF.a_theta3)
+pitch_kd = (2*zeta_pitch*wn_pitch - TF.a_theta1)/TF.a_theta3
+K_theta_DC = (pitch_kp*TF.a_theta3)/(TF.a_theta2 + pitch_kp*TF.a_theta3)
+
 
 #----------altitude loop-------------
-Wh = 7
+Wh = 10
 wn_altitude = 1/Wh*wn_pitch
-zeta_altitude = 0.707
+zeta_altitude = 4.707
 altitude_kp = 2*zeta_altitude*wn_altitude/(K_theta_DC*Va)
 altitude_ki = wn_altitude**2/(K_theta_DC*Va)
-altitude_zone = 10
+altitude_zone = 2 # moving saturation limit around current altitude
 
 #---------airspeed hold using throttle---------------
-wn_throttle = 10
-zeta_throttle = 0.707
-airspeed_throttle_kp = wn_throttle**2/TF.aV2
-airspeed_throttle_ki = (2*zeta_throttle*wn_throttle - TF.aV1)/TF.aV2
+wn_throttle = 1
+zeta_throttle = 0.607
+airspeed_throttle_kp = wn_throttle**2/TF.a_V2
+airspeed_throttle_ki = (2*zeta_throttle*wn_throttle - TF.a_V1)/TF.a_V2

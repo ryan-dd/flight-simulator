@@ -1,39 +1,33 @@
 """
-mavsim
+mavSimPy 
     - Chapter 2 assignment for Beard & McLain, PUP, 2012
     - Update history:  
-        1/10/2019 - RWB
+        2/24/2020 - RWB
 """
 import sys
 sys.path.append('..')
-
-# import viewers and video writer
-from chap2.mav_viewer import mav_viewer
-from chap2.video_writer import VideoWriter
-
-# import parameters
+from chap2.mav_viewer import mavViewer
 import parameters.simulation_parameters as SIM
-# import message types
-from message_types.msg_state import msg_state
+from message_types.msg_state import msgState
 
 # initialize messages
-state = msg_state()  # instantiate state message
+state = msgState()  # instantiate state message
 
 # initialize viewers and video
 VIDEO = False  # True==write video, False==don't write video
-spacecraft_view = mav_viewer()
-if VIDEO == True:
-    video = VideoWriter(video_name="chap2_video.avi",
-                         bounding_box=(0, 0, 1000, 1000),
-                         output_rate=SIM.ts_video)
+mav_view = mavViewer()
+if VIDEO is True:
+    from chap2.video_writer import videoWriter
+    video = videoWriter(video_name="chap2_video.avi",
+                        bounding_box=(0, 0, 1000, 1000),
+                        output_rate=SIM.ts_video)
 
 # initialize the simulation time
 sim_time = SIM.start_time
 
 # main simulation loop
-# Translation first
 while sim_time < SIM.end_time:
-    #-------vary states to check viewer-------------
+    # -------vary states to check viewer-------------
     if sim_time < SIM.end_time/6:
         state.pn += 10*SIM.ts_simulation
     elif sim_time < 2*SIM.end_time/6:
@@ -47,12 +41,17 @@ while sim_time < SIM.end_time:
     else:
         state.phi += 0.1*SIM.ts_simulation
 
-    #-------update viewer and video-------------
-    spacecraft_view.update(state)
-    if VIDEO == True: video.update(sim_time)
+    # -------update viewer and video-------------
+    mav_view.update(state)
+    if VIDEO is True:
+        video.update(sim_time)
 
-    #-------increment time-------------
+    # -------increment time-------------
     sim_time += SIM.ts_simulation
 
 print("Press Ctrl-Q to exit...")
-if VIDEO == True: video.close()
+if VIDEO is True:
+    video.close()
+
+
+

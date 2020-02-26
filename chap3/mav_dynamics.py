@@ -8,31 +8,43 @@ part of mavsimPy
     - Update history:  
         12/17/2018 - RWB
         1/14/2019 - RWB
+        2/24/2020 - RWB
 """
 import sys
 sys.path.append('..')
 import numpy as np
 
 # load message types
-from message_types.msg_state import msg_state
+from message_types.msg_state import msgState
 
-from parameters.aerosonde_parameters import *
-from tools.tools import Quaternion2Euler
+import parameters.aerosonde_parameters as MAV
+from tools.rotations import Quaternion2Euler
 
-class mav_dynamics:
+class mavDynamics:
     def __init__(self, Ts):
         self.ts_simulation = Ts
         # set initial states based on parameter file
         # _state is the 13x1 internal state of the aircraft that is being propagated:
         # _state = [pn, pe, pd, u, v, w, e0, e1, e2, e3, p, q, r]
-        self._state = np.array([pn0, pe0, pd0, u0, v0, w0, e0, e1, e2, e3, p0, q0, r0])[:, None]
-        self.msg_true_state = msg_state()
+        self._state = np.array([[MAV.pn0],  # (0)
+                               [MAV.pe0],   # (1)
+                               [MAV.pd0],   # (2)
+                               [MAV.u0],    # (3)
+                               [MAV.v0],    # (4)
+                               [MAV.w0],    # (5)
+                               [MAV.e0],    # (6)
+                               [MAV.e1],    # (7)
+                               [MAV.e2],    # (8)
+                               [MAV.e3],    # (9)
+                               [MAV.p0],    # (10)
+                               [MAV.q0],    # (11)
+                               [MAV.r0]])   # (12)
+        self.true_state = msgState()
 
     ###################################
     # public functions
-    def update_state(self, forces_moments):
+    def update(self, forces_moments):
         '''
-
             Integrate the differential equations defining dynamics. 
             Inputs are the forces and moments on the aircraft.
             Ts is the time step between function calls.
@@ -58,7 +70,7 @@ class mav_dynamics:
         self._state[9][0] = self._state.item(9)/normE
 
         # update the message class for the true state
-        self._update_msg_true_state()
+        self._update_true_state()
 
     ###################################
     # private functions
@@ -67,9 +79,9 @@ class mav_dynamics:
         for the dynamics xdot = f(x, u), returns f(x, u)
         """
         # extract the states
-        pn = state.item(0)
-        pe = state.item(1)
-        pd = state.item(2)
+        # pn = state.item(0)
+        # pe = state.item(1)
+        # pd = state.item(2)
         u = state.item(3)
         v = state.item(4)
         w = state.item(5)
@@ -98,9 +110,9 @@ class mav_dynamics:
         pd_dot = pddots[2]
 
         # position dynamics
-        u_dot = r*v - q*w + 1/mass * fx
-        v_dot = p*w - r*u + 1/mass * fy
-        w_dot = q*u - p*v + 1/mass * fz
+        u_dot = r*v - q*w + 1/MAV.mass * fx
+        v_dot = p*w - r*u + 1/MAV.mass * fy
+        w_dot = q*u - p*v + 1/MAV.mass * fz
 
         edots = 1/2*np.array([
             [0, -p, -q , -r],
@@ -114,24 +126,24 @@ class mav_dynamics:
         e3_dot = edots[3]
 
         # rotatonal dynamics
-        p_dot = gamma1*p*q-gamma2*q*r + gamma3*l+gamma4*n
-        q_dot = gamma5*p*r - gamma6*(p**2 - r**2) + 1/Jy*m
-        r_dot = gamma7*p*q - gamma1*q*r + gamma4*l+gamma8*n 
+        p_dot = MAV.gamma1*p*q-MAV.gamma2*q*r + MAV.gamma3*l+MAV.gamma4*n
+        q_dot = MAV.gamma5*p*r - MAV.gamma6*(p**2 - r**2) + 1/MAV.Jy*m
+        r_dot = MAV.gamma7*p*q - MAV.gamma1*q*r + MAV.gamma4*l+MAV.gamma8*n 
 
         # collect the derivative of the states
         x_dot = np.array([[pn_dot, pe_dot, pd_dot, u_dot, v_dot, w_dot,
                            e0_dot, e1_dot, e2_dot, e3_dot, p_dot, q_dot, r_dot]]).T
         return x_dot
 
-    def _update_msg_true_state(self):
+    def _update_true_state(self):
         # update the true state message:
         phi, theta, psi = Quaternion2Euler(self._state[6:10])
-        self.msg_true_state.pn = self._state.item(0)
-        self.msg_true_state.pe = self._state.item(1)
-        self.msg_true_state.h = -self._state.item(2)
-        self.msg_true_state.phi = phi
-        self.msg_true_state.theta = theta
-        self.msg_true_state.psi = psi
-        self.msg_true_state.p = self._state.item(10)
-        self.msg_true_state.q = self._state.item(11)
-        self.msg_true_state.r = self._state.item(12)
+        self.true_state.pn = self._state.item(0)
+        self.true_state.pe = self._state.item(1)
+        self.true_state.h = -self._state.item(2)
+        self.true_state.phi = phi
+        self.true_state.theta = theta
+        self.true_state.psi = psi
+        self.true_state.p = self._state.item(10)
+        self.true_state.q = self._state.item(11)
+        self.true_state.r = self._state.item(12)

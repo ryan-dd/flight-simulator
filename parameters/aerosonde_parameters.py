@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 import numpy as np
-from tools.tools import Euler2Quaternion
+from tools.rotations import Euler2Quaternion
 
 ######################################################################################
                 #   Initial Conditions
@@ -21,17 +21,13 @@ q0 = 0  # initial pitch rate
 r0 = 0  # initial yaw rate
 Va0 = np.sqrt(u0**2+v0**2+w0**2)
 #   Quaternion State
-e = Euler2Quaternion(phi0, theta0, psi0)
-e0 = e[0]
-e1 = e[1]
-e2 = e[2]
-e3 = e[3]
+e0, e1, e2, e3 = Euler2Quaternion(phi0, theta0, psi0)
 
 
 ######################################################################################
                 #   Physical Parameters
 ######################################################################################
-mass = 11 #kg
+mass = 11. #kg
 Jx = 0.8244 #kg m^2
 Jy = 1.135
 Jz = 1.759
@@ -92,7 +88,7 @@ C_n_delta_r = -0.069
                 #   Propeller thrust / torque parameters (see addendum by McLain)
 ######################################################################################
 # Prop parameters
-D_prop = 20*(0.0254)     # prop diameter in m
+D_prop = 20 * (0.0254)     # prop diameter in m
 
 # Motor parameters
 KV = 145.                   # from datasheet RPM/V
@@ -100,12 +96,15 @@ KQ = (1. / KV) * 60. / (2. * np.pi)  # KQ in N-m/A, V-s/rad
 R_motor = 0.042              # ohms
 i0 = 1.5                     # no-load (zero-torque) current (A)
 
+k_motor = 80
+C_prop = 1.0
+
 
 # Inputs
 ncells = 12.
 V_max = 3.7 * ncells  # max voltage for specified number of battery cells
 
-# Coeffiecients from prop_data fit
+# Coefficients from prop_data fit
 C_Q2 = -0.01664
 C_Q1 = 0.004970
 C_Q0 = 0.005230
@@ -128,15 +127,15 @@ gamma7 = ((Jx - Jy) * Jx + (Jxz**2)) / gamma
 gamma8 = Jx / gamma
 
 #   C values defines on pag 62
-C_p_0         = gamma3 * C_ell_0      + gamma4 * C_n_0
-C_p_beta      = gamma3 * C_ell_beta   + gamma4 * C_n_beta
-C_p_p         = gamma3 * C_ell_p      + gamma4 * C_n_p
-C_p_r         = gamma3 * C_ell_r      + gamma4 * C_n_r
-C_p_delta_a    = gamma3 * C_ell_delta_a + gamma4 * C_n_delta_a
-C_p_delta_r    = gamma3 * C_ell_delta_r + gamma4 * C_n_delta_r
-C_r_0         = gamma4 * C_ell_0      + gamma8 * C_n_0
-C_r_beta      = gamma4 * C_ell_beta   + gamma8 * C_n_beta
-C_r_p         = gamma4 * C_ell_p      + gamma8 * C_n_p
-C_r_r         = gamma4 * C_ell_r      + gamma8 * C_n_r
-C_r_delta_a    = gamma4 * C_ell_delta_a + gamma8 * C_n_delta_a
-C_r_delta_r    = gamma4 * C_ell_delta_r + gamma8 * C_n_delta_r
+C_p_0 = gamma3 * C_ell_0 + gamma4 * C_n_0
+C_p_beta = gamma3 * C_ell_beta + gamma4 * C_n_beta
+C_p_p = gamma3 * C_ell_p + gamma4 * C_n_p
+C_p_r = gamma3 * C_ell_r + gamma4 * C_n_r
+C_p_delta_a = gamma3 * C_ell_delta_a + gamma4 * C_n_delta_a
+C_p_delta_r = gamma3 * C_ell_delta_r + gamma4 * C_n_delta_r
+C_r_0 = gamma4 * C_ell_0 + gamma8 * C_n_0
+C_r_beta = gamma4 * C_ell_beta + gamma8 * C_n_beta
+C_r_p = gamma4 * C_ell_p + gamma8 * C_n_p
+C_r_r = gamma4 * C_ell_r + gamma8 * C_n_r
+C_r_delta_a = gamma4 * C_ell_delta_a + gamma8 * C_n_delta_a
+C_r_delta_r = gamma4 * C_ell_delta_r + gamma8 * C_n_delta_r

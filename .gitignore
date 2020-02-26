@@ -131,3 +131,6 @@ dmypy.json
 
 # Video files
 *.avi
+
+*.DS_Store
+*pycache

@@ -1,7 +1,16 @@
+"""
+data_viewer
+
+part of mavsimPy
+    - Beard & McLain, PUP, 2012
+    - Update history:
+        12/17/2018 - RWB
+        1/14/2019 - RWB
+"""
 from state_plotter.Plotter import Plotter
 from state_plotter.plotter_args import *
 
-class data_viewer:
+class dataViewer:
     def __init__(self):
         time_window_length=100
         self.plotter = Plotter(plotting_frequency=100, # refresh plot every 100 time steps

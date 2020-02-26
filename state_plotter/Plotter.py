@@ -18,7 +18,7 @@ class Plotter:
     """
     Class for plotting methods.
     """
-    def __init__(self, plotting_frequency=1, time_window=15):
+    def __init__(self, plotting_frequency=1, time_window=15, window_title="States"):
         ''' Initialize the Plotter
 
             plotting_freq: number of times the update function must be called
@@ -47,7 +47,7 @@ class Plotter:
         # initialize Qt gui application and window
         self.default_window_size = (1000, 800)
         self.app = pg.QtGui.QApplication([])
-        self.window = pg.GraphicsWindow(title="States")
+        self.window = pg.GraphicsWindow(title=window_title)
         self.window.resize(*self.default_window_size)
         self.window.setBackground(self.background_color)
         self.old_windows = []

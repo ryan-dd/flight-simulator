@@ -9,7 +9,7 @@ part of mavsim_python
 """
 import numpy as np
 
-class msg_waypoints:
+class msgWaypoints:
     def __init__(self):
         # the first two flags are used for interacting with the path planner
         #
@@ -25,20 +25,27 @@ class msg_waypoints:
         self.type = 'straight_line'
         # self.type = 'fillet'
         # self.type = 'dubins'
-        # maximum number of waypoints.  This is used to pre-allocate memory to improve efficiency
-        self.max_waypoints = 100
         # current number of valid waypoints in memory
         self.num_waypoints = 0
         # [n, e, d] - coordinates of waypoints
-        self.ned = np.inf * np.ones((3, self.max_waypoints))
+        self.ned = np.array([[],[],[]])
         # the airspeed that is commanded along the waypoints
-        self.airspeed = np.inf * np.ones((1, self.max_waypoints))
+        self.airspeed = np.array([])
         # the desired course at each waypoint (used only for Dubins paths)
-        self.course = np.inf * np.ones((1, self.max_waypoints))
+        self.course = np.array([])
 
         # these last three variables are used by the path planner running cost at each node
-        self.cost = np.inf * np.ones((1, self.max_waypoints))
+        self.cost = np.array([])
         # index of the parent to the node
-        self.parent_idx = np.inf * np.ones((1, self.max_waypoints))
+        self.parent = np.array([])
         # can this node connect to the goal?
-        self.flag_connect_to_goal = 0 * np.ones((1, self.max_waypoints))
+        self.connect_to_goal = np.array([])
+
+    def add(self, ned, airspeed, course, cost, parent, connect_to_goal):
+        self.num_waypoints = self.num_waypoints + 1
+        self.ned = np.append(self.ned, ned, axis=1)
+        self.airspeed = np.append(self.airspeed, airspeed)
+        self.course = np.append(self.course, course)
+        self.cost = np.append(self.cost, cost)
+        self.parent = np.append(self.parent, parent)
+        self.connect_to_goal = np.append(self.connect_to_goal, connect_to_goal)

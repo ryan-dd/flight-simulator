@@ -25,8 +25,8 @@ VIDEO = False  # True==write video, False==don't write video
 world_view = world_viewer()  # initialize the viewer
 data_view = data_viewer()  # initialize view of data plots
 if VIDEO == True:
-    from chap2.video_writer import VideoWriter
-    video = VideoWriter(video_name="chap12_video.avi",
+    from chap2.video_writer import video_writer
+    video = video_writer(video_name="chap12_video.avi",
                          bounding_box=(0, 0, 1000, 1000),
                          output_rate=SIM.ts_video)
 
