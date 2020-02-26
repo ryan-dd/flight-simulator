@@ -1,18 +1,18 @@
 import sys
 sys.path.append('..')
 import numpy as np
-import chap5.transfer_function_coef as TF
+import chap6.transfer_function_coef as TF
+from chap5.trim import compute_trim
 import parameters.aerosonde_parameters as MAV
 
-gravity = 9.81
-sigma = 5
-Va0 = 20
-Va = 20
-Vg = MAV.Va0
+Va = 25
+gamma = 0
 
 #----------roll loop-------------
 wn_roll = 10
 zeta_roll = 0.707
+delta_a_max = 30
+roll_e_max = 25
 
 roll_kp = delta_a_max / roll_e_max
 roll_kd = (2*zeta_roll*wn_roll - TF.aphi1)/(TF.aphi2)
@@ -22,13 +22,14 @@ Wx = 7
 wn_course = 1/Wx*wn_roll
 zeta_course = 2
 
-course_kp = 2*zeta_course*wn_course*Vg/MAV.gravity
-course_ki = wn_course**2*Vg/MAV.gravity
+course_kp = 2*zeta_course*wn_course*Va/MAV.gravity
+course_ki = wn_course**2*Va/MAV.gravity
 
 #----------sideslip loop-------------
 # How to tune emaxbeta?
-e_max_beta = 0.2
+e_max_beta = 25
 zeta_beta = 0.707
+delta_r_max = 30
 
 sideslip_kp = delta_r_max/e_max_beta
 wn_beta = (TF.abeta1 + TF.abeta2*sideslip_kp)/2*zeta_beta
@@ -37,11 +38,12 @@ sideslip_ki = wn_beta**2/TF.abeta2
 
 #----------yaw damper-------------
 # How do you tune this one??
-
-yaw_damper_tau_r = 0.5
+yaw_damper_tau_r = -1
 yaw_damper_kp = 0.5
 
 #----------pitch loop-------------
+delta_e_max = 30
+e_max_pitch = 25
 wn_pitch = delta_e_max/e_max_pitch
 zeta_pitch = 0.707
 

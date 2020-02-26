@@ -145,6 +145,8 @@ class mav_dynamics:
         return x_dot
 
     def _update_velocity_data(self, wind=np.zeros((6,1))):
+        # _state = [pn, pe, pd, u, v, w, e0, e1, e2, e3, p, q, r]
+
         # Unpack wind parameters
         wn = wind[0].item(0)
         we = wind[1].item(0)
@@ -280,10 +282,16 @@ class mav_dynamics:
         self.msg_true_state.phi = phi.item(0)
         self.msg_true_state.theta = theta.item(0)
         self.msg_true_state.psi = psi.item(0)
-        u = self._state[0]
-        v = self._state[1]
-        w = self._state[2]
+        u = self._state[3]
+        v = self._state[4]
+        w = self._state[5]
+        e0 = self._state[6]
+        e1 = self._state[7]
+        e2 = self._state[8]
+        e3 = self._state[9]
+
         Vg = np.sqrt(u**2 + v**2 + w**2).item(0)
+    
         self.msg_true_state.Vg = Vg
         gamma_wt = np.arcsin(-w/Vg)
         self.msg_true_state.gamma = gamma_wt.item(0)
