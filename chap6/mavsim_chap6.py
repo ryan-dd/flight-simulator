@@ -12,7 +12,7 @@ import parameters.simulation_parameters as SIM
 
 from chap2.mav_viewer import mavViewer
 from chap3.data_viewer import dataViewer
-from chap6.mav_dynamics import mavDynamics
+from chap4.mav_dynamics import mavDynamics
 from chap4.wind_simulation import windSimulation
 from chap6.autopilot import autopilot
 from tools.signals import signals
