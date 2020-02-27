@@ -66,6 +66,7 @@ def compute_trim(mav, Va, gamma):
     trim_state = np.array([res.x[0:13]]).T
     trim_state[6:10] = trim_state[6:10]/np.linalg.norm(trim_state[6:10])
     trim_input = np.array([res.x[13:17]]).T
+    mav._state = mav._state[:,None]
     print('trim_state=', trim_state.T)
     print('trim_input=', trim_input.T)
     return trim_state, trim_input

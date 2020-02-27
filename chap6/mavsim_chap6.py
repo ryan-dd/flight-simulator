@@ -12,11 +12,11 @@ import parameters.simulation_parameters as SIM
 
 from chap2.mav_viewer import mavViewer
 from chap3.data_viewer import dataViewer
-from chap4.mav_dynamics import mavDynamics
+from chap6.mav_dynamics import mavDynamics
 from chap4.wind_simulation import windSimulation
 from chap6.autopilot import autopilot
 from tools.signals import signals
-
+from chap5.trim import compute_trim
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
 mav_view = mavViewer()  # initialize the mav viewer
@@ -50,13 +50,19 @@ chi_command = signals(dc_offset=np.radians(180),
 
 # initialize the simulation time
 sim_time = SIM.start_time
-
+state_trim = compute_trim(mav, 25, 0)
+state = state_trim[0]
+delta_trim = state_trim[1]
 # main simulation loop
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
-
+    # save_state = np.copy(mav._state)
+    # state_trim = compute_trim(mav, 25, 0)
+    # state = state_trim[0]
+    # delta_trim = state_trim[1]
+    # mav._state = np.copy(save_state)
     # -------autopilot commands-------------
-    commands.airspeed_command = 25 #Va_command.square(sim_time)
+    commands.airspeed_command = Va_command.square(sim_time)
     commands.course_command = 0 #chi_command.square(sim_time)
     commands.altitude_command = 100 #h_command.square(sim_time)
 
@@ -66,7 +72,10 @@ while sim_time < SIM.end_time:
 
     # -------physical system-------------
     current_wind = wind.update()  # get the new wind vector
-    mav.update(delta, current_wind)  # propagate the MAV dynamics
+
+    delta_trim[3] = delta[3]
+    # Va first, then longitudinal loop (e), then aeleron
+    mav.update(delta_trim, current_wind)  # propagate the MAV dynamics
 
     # -------update viewer-------------
     mav_view.update(mav.true_state)  # plot body of MAV
