@@ -33,7 +33,7 @@ mav = mavDynamics(SIM.ts_simulation)
 
 # use compute_trim function to compute trim state and trim input
 Va = 25.
-gamma = 10.*np.pi/180.
+gamma = 0.*np.pi/180.
 trim_state, trim_input = compute_trim(mav, Va, gamma)
 mav._state = trim_state  # set the initial state of the mav to the trim state
 delta = trim_input  # set input to constant constant trim input

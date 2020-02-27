@@ -15,8 +15,8 @@ delta_e_max = np.radians(45)
 
 #----------roll loop-------------
 # get transfer function data for delta_a to phi
-zeta_roll = 1.2
-roll_e_max = 0.2#np.radians(45)
+zeta_roll = 0.707
+roll_e_max = np.radians(45)
 
 roll_kp = delta_a_max / roll_e_max
 wn_roll = np.sqrt(np.abs(TF.a_phi2)*roll_kp)
@@ -24,9 +24,9 @@ wn_roll = np.sqrt(np.abs(TF.a_phi2)*roll_kp)
 roll_kd = (2*zeta_roll*wn_roll - TF.a_phi1)/(TF.a_phi2)
 
 #----------course loop-------------
-Wx = 1.2
+Wx = 10
 wn_course = 1/Wx*wn_roll
-zeta_course = 1.5
+zeta_course = 0.707
 
 course_kp = 2*zeta_course*wn_course*Vg/MAV.gravity
 course_ki = wn_course**2*Vg/MAV.gravity
@@ -62,5 +62,5 @@ altitude_zone = 2 # moving saturation limit around current altitude
 #---------airspeed hold using throttle---------------
 wn_throttle = 5
 zeta_throttle = 1.707
-airspeed_throttle_kp = 1.25#wn_throttle**2/TF.a_V2
+airspeed_throttle_kp = 1.1#wn_throttle**2/TF.a_V2
 airspeed_throttle_ki = 0.35#(2*zeta_throttle*wn_throttle - TF.a_V1)/TF.a_V2

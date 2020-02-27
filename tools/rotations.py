@@ -47,9 +47,18 @@ def Euler2Rotation(phi, theta, psi):
     R = R_roll @ R_pitch @ R_yaw  # inertial to body (Equation 2.4 in book)
     return R.T  # transpose to return body to inertial
 
-def Quaternion2Rotation(quaternion):
-    Rot = Rotation.from_quat([quaternion[3].item(0), quaternion[0].item(0), quaternion[1].item(0), quaternion[2].item(0)])
-    return Rot.as_dcm()
+def Quaternion2Rotation(e):
+    e0 = e.item(0)
+    e1 = e.item(1)
+    e2 = e.item(2)
+    e3 = e.item(3)
+
+    R = np.array([
+        [e0 ** 2 + e1 ** 2 - e2 ** 2 - e3 ** 2, 2 * (e1 * e2 - e0 * e3), 2 * (e1 * e3 + e0 * e2)],
+        [2 * (e1 * e2 + e0 * e3), e0 ** 2 - e1 ** 2 + e2 ** 2 - e3 ** 2, 2 * (e2 * e3 - e0 * e1)],
+        [2 * (e1 * e3 - e0 * e2), 2 * (e2 * e3 + e0 * e1), e0 ** 2 - e1 ** 2 - e2 ** 2 + e3 ** 2]
+                ])
+    return R
 
 if __name__ == "__main__":
     # Test the subjects and compare to scipy

@@ -18,7 +18,7 @@ def compute_trim(mav, Va, gamma):
     state0 = np.array([[state[0][0]],  # pn
                        [state[1][0]],  # pe
                        [state[2][0]],  # pd
-                       [mav._Va],  # u
+                       [Va],  # u
                        [0],  # v
                        [0],  # w
                        [e0],  # e0
@@ -32,7 +32,7 @@ def compute_trim(mav, Va, gamma):
     delta0 = np.array([[0],  # delta_e
                        [0],  # delta_a
                        [0],  # delta_r
-                       [0]  # delta_t
+                       [0.5]  # delta_t
                        ])
     x0 = np.concatenate((state0, delta0), axis=0)
     # define equality constraints
@@ -78,9 +78,8 @@ def trim_objective_fun(x, mav, Va, gamma):
     mav._state = state_vars#np.asarray(state_vars)[:,None]
     mav._update_velocity_data()
     forces_moments = mav._forces_moments(delta_vars)
-    f = mav._derivatives(mav._state, forces_moments)
-    xdotdesired = np.vstack((0,0, -Va*np.sin(gamma), 0,0,0,0,0,0,0,0,0,0))
-    result = xdotdesired-f
-    J = np.linalg.norm(result[2:13])**2
+    x_dot_current = mav._derivatives(mav._state, forces_moments)
+    x_dot_desired = np.vstack((0,0, -Va*np.sin(gamma),0,0,0,0,0,0,0,0,0,0))
+    J = np.linalg.norm(x_dot_desired[2:13] - x_dot_current[2:13])**2
     return J
 

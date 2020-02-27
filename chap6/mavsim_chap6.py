@@ -56,15 +56,10 @@ delta_trim = state_trim[1]
 # main simulation loop
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
-    # save_state = np.copy(mav._state)
-    # state_trim = compute_trim(mav, 25, 0)
-    # state = state_trim[0]
-    # delta_trim = state_trim[1]
-    # mav._state = np.copy(save_state)
     # -------autopilot commands-------------
     commands.airspeed_command = Va_command.square(sim_time)
     commands.course_command = 0 #chi_command.square(sim_time)
-    commands.altitude_command = 100 #h_command.square(sim_time)
+    commands.altitude_command = h_command.square(sim_time)
 
     # -------controller-------------
     estimated_state = mav.true_state  # uses true states in the control

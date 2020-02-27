@@ -47,7 +47,7 @@ class mavDynamics:
         self._wind = np.array([[0.], [0.], [0.]])  # wind in NED frame in meters/sec
         self._update_velocity_data()
         # store forces to avoid recalculation in the sensors function
-        self._forces = np.array([[], [], []])
+        self._forces = np.array([[0], [0], [0]])
         self._Va = MAV.u0
         self._alpha = 0
         self._beta = 0
@@ -206,7 +206,9 @@ class mavDynamics:
         delta_a = delta[0].item(0) 
         delta_e = delta[1].item(0)
         delta_r = delta[2].item(0)
-        delta_t = delta[3].item(0) 
+        delta_t = delta[3].item(0)
+        if delta_t < 0:
+            delta_t = 0
         
         e0 = self._state.item(6)
         e1 = self._state.item(7)
@@ -232,12 +234,12 @@ class mavDynamics:
         V_in = MAV.V_max*delta_t
         D_prop = MAV.D_prop
         rho = MAV.rho
-        # Quadratic formula to solve for motor speed
-        a_part = (rho * D_prop**5) / ((2 * np.pi)**2) * MAV.C_Q0
-        b_part = (rho * (D_prop**4) * MAV.C_Q1 * Va)/(2 * np.pi)  + (MAV.KQ**2)/MAV.R_motor
-        c_part = rho * (D_prop**3) * MAV.C_Q2 * (Va**2) - (MAV.KQ * V_in)/MAV.R_motor + MAV.KQ * MAV.i0
+        a_1 = MAV.rho * MAV.D_prop**5 / ((2.0*np.pi)**2) * MAV.C_Q0
+        b_1 = MAV.rho * MAV.D_prop**4 / (2.0*np.pi) * MAV.C_Q1 * self._Va + (MAV.KQ**2)/MAV.R_motor
+        c_1 = MAV.rho * MAV.D_prop**3 * MAV.C_Q2 * self._Va**2 - MAV.KQ / MAV.R_motor * V_in + MAV.KQ * MAV.i0
+
         # Consider only positive root
-        Omega_op = (-b_part + np.sqrt(b_part**2 - 4*a_part*c_part))/(2.*a_part)
+        Omega_op = (-b_1 + np.sqrt(b_1**2 - 4 * a_1 * c_1)) / (2.0 * a_1)
         # compute advance rat io
         J_op = (2*np.pi*self._Va)/(Omega_op*D_prop)
         # compute nond imens ional ized c o e f f i c i e n t s of thrus t and torque
@@ -283,7 +285,7 @@ class mavDynamics:
         m_a = np.vstack((Mx, My, Mz))
 
         all_moments = m_a + m_p
-        total_forces = fa + f_p
+        total_forces = fa + f_p + fg
 
         fx = total_forces[0].item(0)
         fy = total_forces[1].item(0)
