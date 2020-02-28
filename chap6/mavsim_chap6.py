@@ -53,12 +53,13 @@ sim_time = SIM.start_time
 state_trim = compute_trim(mav, 25, 0)
 state = state_trim[0]
 delta_trim = state_trim[1]
+# Delta is (a e r t)
 # main simulation loop
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
     # -------autopilot commands-------------
     commands.airspeed_command = Va_command.square(sim_time)
-    commands.course_command = 0 #chi_command.square(sim_time)
+    commands.course_command = chi_command.square(sim_time)
     commands.altitude_command = h_command.square(sim_time)
 
     # -------controller-------------
@@ -68,9 +69,11 @@ while sim_time < SIM.end_time:
     # -------physical system-------------
     current_wind = wind.update()  # get the new wind vector
 
-    delta_trim[3] = delta[3]
+    # delta_trim[3] = delta[3]
+    delta_trim[1] = delta[1]
+    # delta_trim[0] = delta[0]
     # Va first, then longitudinal loop (e), then aeleron
-    mav.update(delta_trim, current_wind)  # propagate the MAV dynamics
+    mav.update(delta, current_wind)  # propagate the MAV dynamics
 
     # -------update viewer-------------
     mav_view.update(mav.true_state)  # plot body of MAV
