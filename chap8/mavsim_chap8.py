@@ -9,18 +9,18 @@ sys.path.append('..')
 import numpy as np
 import parameters.simulation_parameters as SIM
 
-from chap2.mav_viewer import mav_viewer
-from chap3.data_viewer import data_viewer
-from chap4.wind_simulation import wind_simulation
+from chap2.mav_viewer import mavViewer
+from chap3.data_viewer import dataViewer
+from chap4.wind_simulation import windSimulation
 from chap6.autopilot import autopilot
-from chap7.mav_dynamics import mav_dynamics
-from chap8.observer_full import observer
+from chap7.mav_dynamics import mavDynamics
+from chap8.observer import observer
 from tools.signals import signals
 
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
-mav_view = mav_viewer()  # initialize the mav viewer
-data_view = data_viewer()  # initialize view of data plots
+mav_view = mavViewer()  # initialize the mav viewer
+data_view = dataViewer()  # initialize view of data plots
 if VIDEO == True:
     from chap2.video_writer import video_writer
     video = video_writer(video_name="chap8_video.avi",
@@ -28,14 +28,14 @@ if VIDEO == True:
                          output_rate=SIM.ts_video)
 
 # initialize elements of the architecture
-wind = wind_simulation(SIM.ts_simulation)
-mav = mav_dynamics(SIM.ts_simulation)
+wind = windSimulation(SIM.ts_simulation)
+mav = mavDynamics(SIM.ts_simulation)
 ctrl = autopilot(SIM.ts_simulation)
 obsv = observer(SIM.ts_simulation)
 
 # autopilot commands
-from message_types.msg_autopilot import msg_autopilot
-commands = msg_autopilot()
+from message_types.msg_autopilot import msgAutopilot
+commands = msgAutopilot()
 Va_command = signals(dc_offset=25.0, amplitude=3.0, start_time=2.0, frequency = 0.01)
 h_command = signals(dc_offset=100.0, amplitude=10.0, start_time=0.0, frequency = 0.02)
 chi_command = signals(dc_offset=np.radians(180), amplitude=np.radians(45), start_time=5.0, frequency = 0.015)
