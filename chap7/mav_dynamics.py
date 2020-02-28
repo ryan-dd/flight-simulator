@@ -144,8 +144,12 @@ class mavDynamics:
             self._sensors.gps_n = self._state.item(0) + self._gps_eta_n
             self._sensors.gps_e = self._state.item(1) + self._gps_eta_e
             self._sensors.gps_h = -self._state.item(2) + self._gps_eta_h
-            self._sensors.gps_Vg = np.linalg.norm(self._state[3:6]) + np.random.normal(0, SENSOR.gps_Vg_sigma)
-            self._sensors.gps_course = (np.arctan2(self._state[1], self._state[2]) + np.random.normal(0, SENSOR.gps_course_sigma)).item(0)
+            Va = self._Va
+            wn = self._wind[0]
+            we = self._wind[1]
+            wd = self._wind[2]
+            self._sensors.gps_Vg = (np.sqrt((Va*cos(psi)+wn)**2 + (Va*sin(psi+we))**2) + np.random.normal(0, SENSOR.gps_Vg_sigma)).item(0)
+            self._sensors.gps_course = (np.arctan2((Va*sin(psi+we)), (Va*cos(psi)+wn)) + np.random.normal(0, SENSOR.gps_course_sigma)).item(0)
             self._t_gps = 0
         else:
             self._t_gps += self._ts_simulation
