@@ -24,7 +24,7 @@ data_view = dataViewer()  # initialize view of data plots
 if VIDEO is True:
     from chap2.video_writer import videoWriter
     video = videoWriter(video_name="chap6_video.avi",
-                        bounding_box=(0, 0, 1000, 1000),
+                        bounding_box=(0, 0, 2000, 1000),
                         output_rate=SIM.ts_video)
 
 # initialize elements of the architecture
@@ -50,10 +50,6 @@ chi_command = signals(dc_offset=np.radians(180),
 
 # initialize the simulation time
 sim_time = SIM.start_time
-state_trim = compute_trim(mav, 25, 0)
-state = state_trim[0]
-delta_trim = state_trim[1]
-# Delta is (a e r t)
 # main simulation loop
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
@@ -69,9 +65,6 @@ while sim_time < SIM.end_time:
     # -------physical system-------------
     current_wind = wind.update()  # get the new wind vector
 
-    # delta_trim[3] = delta[3]
-    #delta_trim[1] = delta[1]
-    # delta_trim[0] = delta[0]
     # Va first, then longitudinal loop (e), then aeleron
     mav.update(delta, current_wind)  # propagate the MAV dynamics
 
