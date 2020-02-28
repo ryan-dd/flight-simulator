@@ -6,7 +6,6 @@ observer
 """
 import sys
 import numpy as np
-import scipy.stats as stats
 from math import cos, sin, tan
 sys.path.append('..')
 import parameters.control_parameters as CTRL
@@ -15,6 +14,7 @@ import parameters.aerosonde_parameters as MAV
 import parameters.sensor_parameters as SENSOR
 from tools.rotations import Euler2Rotation
 from tools.wrap import wrap
+
 from message_types.msg_state import msgState
 
 class observer:
@@ -151,12 +151,14 @@ class ekf_attitude:
         threshold = 2.0
         h = self.h(self.xhat, state)
         C = jacobian(self.h, self.xhat, state)
-        y = np.vstack((measurement.accel_x, measurement.accel_y, measurement.accel_z))
-        S_inv = np.linalg.inv(self.R_accel + C @ self.P @ C.T)
-        if stats.chi2.sf((y-h).T @ S_inv @ (y-h), df=3) > 0.01:
-            L = self.P @ C.T @ np.linalg.inv(self.R_accel + C @ self.P @ C.T)
-            self.P = (np.eye(2) - L @ C) @ self.P @ (np.eye(2) - L @ C).T + L @ np.atleast_2d(self.R_accel) @ L.T
-            self.xhat = self.xhat + L @ np.atleast_2d(y - h)
+        y = np.array([measurement.accel_x, measurement.accel_y, measurement.accel_z])
+        for i in range(0, 3):
+            if np.abs(y[i]-h[i,0]) < threshold:
+                hi = h[i]
+                Ci = np.atleast_2d(C[i])
+                L = self.P @ Ci.T @ (self.R_accel[i,i] + Ci @ self.P @ Ci.T)**-1
+                self.P = (np.eye(2) - L @ Ci) @ self.P @ (np.eye(2) - L @ Ci).T + L @ np.atleast_2d(self.R_accel[i,i]) @ L.T
+                self.xhat = self.xhat + L @ np.atleast_2d(y[0] - hi[0])
 
 class ekf_position:
     # implement continous-discrete EKF to estimate pn, pe, chi, Vg
