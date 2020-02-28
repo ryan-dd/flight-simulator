@@ -16,7 +16,7 @@ delta_e_max = np.radians(45)
 #----------roll loop-------------
 # get transfer function data for delta_a to phi
 zeta_roll = 0.707
-roll_e_max = np.radians(30)
+roll_e_max = np.radians(20)
 
 roll_kp = delta_a_max / roll_e_max
 wn_roll = np.sqrt(np.abs(TF.a_phi2)*roll_kp)
@@ -24,12 +24,12 @@ wn_roll = np.sqrt(np.abs(TF.a_phi2)*roll_kp)
 roll_kd = (2*zeta_roll*wn_roll - TF.a_phi1)/(TF.a_phi2)
 
 #----------course loop-------------
-Wx = 10
+Wx = 50
 wn_course = 1/Wx*wn_roll
-zeta_course = 0.707
+zeta_course = 0.907
 
 course_kp = 2*zeta_course*wn_course*Vg/MAV.gravity
-course_ki = wn_course**2*Vg/MAV.gravity
+course_ki = (wn_course**2*Vg/MAV.gravity)
 
 #----------sideslip loop-------------
 # How to tune emaxbeta?

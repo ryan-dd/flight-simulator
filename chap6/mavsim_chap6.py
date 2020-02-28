@@ -70,7 +70,7 @@ while sim_time < SIM.end_time:
     current_wind = wind.update()  # get the new wind vector
 
     # delta_trim[3] = delta[3]
-    delta_trim[1] = delta[1]
+    #delta_trim[1] = delta[1]
     # delta_trim[0] = delta[0]
     # Va first, then longitudinal loop (e), then aeleron
     mav.update(delta, current_wind)  # propagate the MAV dynamics
