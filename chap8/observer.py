@@ -163,12 +163,14 @@ class ekf_attitude:
 class ekf_position:
     # implement continous-discrete EKF to estimate pn, pe, chi, Vg
     def __init__(self):
-        self.Q =0
-        self.R =0
+        noise_param_state = 1e-20
+        self.Q = np.eye*noise_param_state
+        self.R = np.eye*SENSOR.gyro_sigma
         self.N = 5  # number of prediction step per sample
         self.Ts = (SIM.ts_control / self.N)
-        self.xhat =0
-        self.P =0
+        chi_0 = 0
+        self.xhat = np.vstack((MAV.pn0, MAV.pe0, MAV.Va0, chi_0, MAV.w0, MAV.w0, MAV.psi0))
+        self.P = np.eye(3)
         self.gps_n_old = 9999
         self.gps_e_old = 9999
         self.gps_Vg_old = 9999
@@ -188,7 +190,29 @@ class ekf_position:
 
     def f(self, x, state):
         # system dynamics for propagation model: xdot = f(x, u)
-        _f =0
+        pn = x.item(0)
+        pe = x.item(1)
+        Vg = x.item(2)
+        chi = x.item(3)
+        wn = x.item(4)
+        we = x.item(5)
+        psi = x.item(6)
+        p = state.item(10)
+        r = state.item(11)
+
+        pndot = Vg*cos(chi)
+        pedot = Vg*sin(chi)
+        Va = -1
+        Vadot = -1
+        wndot = 0
+        wedot = 0
+        # Transform state quaternions to theta and phi
+        theta = state.item()
+        phi = state.item(3)
+        chidot = MAV.gravity/Vg*tan(phi)*cos(chi-psi)
+        psidot = q*sin(phi)/cos(theta) + r*cos(phi)/sin(theta)
+        Vgdot = ((Va*cos(psi) + wn)*(Vadot*cos(psi) - Va*psidot*sin(psi) + wndot) + (Va*sin(psi) + we)*(Vadot*sin(psi) + Va*psidot*cos(psi) + wedot))/Vg
+        _f = np.vstack((pndot, pedot, Vgdot, chidot, 0, 0, psidot))
         return _f
 
     def h_gps(self, x, state):
@@ -198,7 +222,17 @@ class ekf_position:
 
     def h_pseudo(self, x, state):
         # measurement model for wind triangale pseudo measurement
-        _h =0
+        pn = x.item(0)
+        pe = x.item(1)
+        Vg = x.item(2)
+        chi = x.item(3)
+        wn = x.item(4)
+        we = x.item(5)
+        psi = x.item(6)
+        Va = 0
+        y_wind_tri_n = Va*cos(psi) + wn - Vg*cos(chi)
+        y_wind_tri_e = Va*sin(psi) + we - Vg*sin(chi)
+        _h = np.vstack(pn, pe, Vg, chi, y_wind_tri_n, y_wind_tri_e)
         return _h
 
     def propagate_model(self, state):
@@ -216,7 +250,7 @@ class ekf_position:
             self.P =0
 
     def measurement_update(self, state, measurement):
-        # always update based on wind triangle pseudu measurement
+        # always update based on wind triangle pseudo measurement
         h = self.h_pseudo(self.xhat, state)
         C = jacobian(self.h_pseudo, self.xhat, state)
         y = np.array([0, 0])
