@@ -42,8 +42,8 @@ yaw_damper_tau_r = 0.05
 yaw_damper_kp = -0.005
 
 #----------pitch loop-------------
-e_max_pitch = np.radians(3)
-zeta_pitch = 0.8
+e_max_pitch = np.radians(1)
+zeta_pitch = 1.5
 
 pitch_kp = delta_e_max/e_max_pitch*np.sign(TF.a_theta3)
 wn_pitch = np.sqrt(TF.a_theta2 + pitch_kp*TF.a_theta3)
@@ -52,9 +52,9 @@ K_theta_DC = (pitch_kp*TF.a_theta3)/(TF.a_theta2 + pitch_kp*TF.a_theta3)
 
 
 #----------altitude loop-------------
-Wh = 30
+Wh = 50
 wn_altitude = 1/Wh*wn_pitch
-zeta_altitude = 1.6
+zeta_altitude = 1.0
 altitude_kp = 2*zeta_altitude*wn_altitude/(K_theta_DC*Va)
 altitude_ki = wn_altitude**2/(K_theta_DC*Va)
 altitude_zone = 3 # moving saturation limit around current altitude
