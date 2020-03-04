@@ -24,7 +24,7 @@ wn_roll = np.sqrt(np.abs(TF.a_phi2)*roll_kp)
 roll_kd = (2*zeta_roll*wn_roll - TF.a_phi1)/(TF.a_phi2)
 
 #----------course loop-------------
-Wx = 50
+Wx = 30
 wn_course = 1/Wx*wn_roll
 zeta_course = 0.907
 
@@ -42,7 +42,7 @@ yaw_damper_tau_r = 0.05
 yaw_damper_kp = -0.005
 
 #----------pitch loop-------------
-e_max_pitch = np.radians(1)
+e_max_pitch = np.radians(20)
 zeta_pitch = 1.5
 
 pitch_kp = delta_e_max/e_max_pitch*np.sign(TF.a_theta3)

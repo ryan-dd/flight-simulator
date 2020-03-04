@@ -12,6 +12,7 @@ import parameters.simulation_parameters as SIM
 from chap2.mav_viewer import mavViewer
 from chap3.data_viewer import dataViewer
 from chap4.wind_simulation import windSimulation
+from chap5.trim import compute_trim
 from chap6.autopilot import autopilot
 from chap7.mav_dynamics import mavDynamics
 from chap8.observer import observer
@@ -43,24 +44,27 @@ chi_command = signals(dc_offset=np.radians(180), amplitude=np.radians(45), start
 # initialize the simulation time
 sim_time = SIM.start_time
 
+Va = 25.
+gamma = 0.*np.pi/180.
+trim_state, trim_input = compute_trim(mav, Va, gamma)
+delta = trim_input
 # main simulation loop
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
 
     #-------autopilot commands-------------
-    commands.airspeed_command = 25#Va_command.square(sim_time)
-    commands.course_command = 0#chi_command.square(sim_time)
-    commands.altitude_command = 100#h_command.square(sim_time)
+    commands.airspeed_command = Va_command.square(sim_time)
+    commands.course_command = chi_command.square(sim_time)
+    commands.altitude_command = h_command.square(sim_time)
 
     #-------controller-------------
     measurements = mav.sensors()  # get sensor measurements
     estimated_state = obsv.update(measurements)  # estimate states from measurements
     
-    delta, commanded_state = ctrl.update(commands, mav.state)
-
     #-------physical system-------------
     current_wind = wind.update()  # get the new wind vector
     mav.update(delta, current_wind)  # propagate the MAV dynamics
+    delta, commanded_state = ctrl.update(commands, estimated_state)
 
     #-------update viewer-------------
     mav_view.update(mav.true_state)  # plot body of MAV
