@@ -48,14 +48,15 @@ print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
 
     #-------autopilot commands-------------
-    commands.airspeed_command = Va_command.square(sim_time)
-    commands.course_command = chi_command.square(sim_time)
-    commands.altitude_command = h_command.square(sim_time)
+    commands.airspeed_command = 25#Va_command.square(sim_time)
+    commands.course_command = 0#chi_command.square(sim_time)
+    commands.altitude_command = 100#h_command.square(sim_time)
 
     #-------controller-------------
     measurements = mav.sensors()  # get sensor measurements
     estimated_state = obsv.update(measurements)  # estimate states from measurements
-    delta, commanded_state = ctrl.update(commands, estimated_state)
+    
+    delta, commanded_state = ctrl.update(commands, mav.state)
 
     #-------physical system-------------
     current_wind = wind.update()  # get the new wind vector
