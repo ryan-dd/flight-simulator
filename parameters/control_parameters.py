@@ -24,7 +24,7 @@ wn_roll = np.sqrt(np.abs(TF.a_phi2)*roll_kp)
 roll_kd = (2*zeta_roll*wn_roll - TF.a_phi1)/(TF.a_phi2)
 
 #----------course loop-------------
-Wx = 30
+Wx = 15
 wn_course = 1/Wx*wn_roll
 zeta_course = 0.907
 
@@ -39,11 +39,11 @@ course_ki = (wn_course**2*Vg/MAV.gravity)
 
 #----------yaw damper-------------
 yaw_damper_tau_r = 0.05
-yaw_damper_kp = -0.005
+yaw_damper_kp = -0.03
 
 #----------pitch loop-------------
-e_max_pitch = np.radians(20)
-zeta_pitch = 1.5
+e_max_pitch = np.radians(10)
+zeta_pitch = 1.7
 
 pitch_kp = delta_e_max/e_max_pitch*np.sign(TF.a_theta3)
 wn_pitch = np.sqrt(TF.a_theta2 + pitch_kp*TF.a_theta3)
@@ -54,13 +54,13 @@ K_theta_DC = (pitch_kp*TF.a_theta3)/(TF.a_theta2 + pitch_kp*TF.a_theta3)
 #----------altitude loop-------------
 Wh = 50
 wn_altitude = 1/Wh*wn_pitch
-zeta_altitude = 1.0
+zeta_altitude = 1.4
 altitude_kp = 2*zeta_altitude*wn_altitude/(K_theta_DC*Va)
 altitude_ki = wn_altitude**2/(K_theta_DC*Va)
 altitude_zone = 3 # moving saturation limit around current altitude
 
 #---------airspeed hold using throttle---------------
-wn_throttle = 5
+wn_throttle = 7
 zeta_throttle = 1.707
 airspeed_throttle_kp = 1.30#wn_throttle**2/TF.a_V2
 airspeed_throttle_ki = 0.35#(2*zeta_throttle*wn_throttle - TF.a_V1)/TF.a_V2
