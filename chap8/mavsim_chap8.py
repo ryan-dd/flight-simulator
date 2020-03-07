@@ -47,7 +47,7 @@ sim_time = SIM.start_time
 Va = 25.
 gamma = 0.*np.pi/180.
 trim_state, trim_input = compute_trim(mav, Va, gamma)
-delta = trim_input
+delta = np.array([0,0,0,0])#trim_input
 # main simulation loop
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
@@ -64,7 +64,7 @@ while sim_time < SIM.end_time:
     #-------physical system-------------
     current_wind = wind.update()  # get the new wind vector
     mav.update(delta, current_wind)  # propagate the MAV dynamics
-    delta, commanded_state = ctrl.update(commands, estimated_state)
+    delta, commanded_state = ctrl.update(commands, mav.true_state)
 
     #-------update viewer-------------
     mav_view.update(mav.true_state)  # plot body of MAV

@@ -6,7 +6,8 @@ observer
 """
 import sys
 import numpy as np
-from math import cos, sin, tan
+#from math import cos, sin, tan
+from numpy import cos, sin, tan
 from scipy import stats
 
 sys.path.append('..')
@@ -25,11 +26,11 @@ class observer:
         self.estimated_state = msgState()
         # use alpha filters to low pass filter gyros and accels
         self.lpf_gyro_x = alpha_filter(alpha=0.5)
-        self.lpf_gyro_y = alpha_filter(alpha=0.05)
+        self.lpf_gyro_y = alpha_filter(alpha=0.5)
         self.lpf_gyro_z = alpha_filter(alpha=0.5)
-        self.lpf_accel_x = alpha_filter(alpha=0.5)
-        self.lpf_accel_y = alpha_filter(alpha=0.5)
-        self.lpf_accel_z = alpha_filter(alpha=0.5)
+        self.lpf_accel_x = alpha_filter(alpha=0.9)
+        self.lpf_accel_y = alpha_filter(alpha=0.9)
+        self.lpf_accel_z = alpha_filter(alpha=0.9)
         # use alpha filters to low pass filter static and differential pressure
         self.lpf_static = alpha_filter(alpha=0.9)
         self.lpf_diff = alpha_filter(alpha=0.5)
@@ -41,14 +42,15 @@ class observer:
     def update(self, measurements):
 
         # estimates for p, q, r are low pass filter of gyro minus bias estimate
-        self.estimated_state.p = self.lpf_gyro_x.update(measurements.gyro_x) - self.estimated_state.bx #SENSOR.gyro_x_bias
-        self.estimated_state.q = self.lpf_gyro_y.update(measurements.gyro_y) - self.estimated_state.by#SENSOR.gyro_y_bias
-        self.estimated_state.r = self.lpf_gyro_z.update(measurements.gyro_x) - self.estimated_state.bz#SENSOR.gyro_z_bias
+        self.estimated_state.p = self.lpf_gyro_x.update(measurements.gyro_x) - SENSOR.gyro_x_bias
+        self.estimated_state.q = self.lpf_gyro_y.update(measurements.gyro_y) - SENSOR.gyro_y_bias
+        self.estimated_state.r = self.lpf_gyro_z.update(measurements.gyro_x) - SENSOR.gyro_z_bias
 
         # invert sensor model to get altitude and airspeed
         self.estimated_state.h = self.lpf_static.update(measurements.static_pressure)/(MAV.rho*MAV.gravity)
         self.estimated_state.Va = np.sqrt(2/MAV.rho*self.lpf_diff.update(measurements.diff_pressure))
-
+        if self.estimated_state.Va == 0:
+            self.estimated_state.Va = 0.001
         # estimate phi and theta with simple ekf
         self.attitude_ekf.update(self.estimated_state, measurements)
 
@@ -72,18 +74,18 @@ class alpha_filter:
 
     def update(self, u):
         y_prev = self.y
-        self.y = self.alpha * y_prev + (1-self.alpha) * u
+        self.y = self.alpha * y_prev + (1.0 - self.alpha) * u
         return self.y
 
 class ekf_attitude:
     # implement continous-discrete EKF to estimate roll and pitch angles
     def __init__(self):
-        noise_param_state = 1e-10
-        self.Q = np.eye(2)*noise_param_state
+        noise_param_state = 1e-3
+        self.Q = np.diag((1e-9, 1e-9))
         self.Q_gyro = np.eye(3)*SENSOR.gyro_sigma**2
         self.R_accel = np.eye(3)*SENSOR.accel_sigma**2
         self.N = 5  # number of prediction step per sample
-        self.xhat = np.vstack((0.0, 0.0))#np.vstack((MAV.phi0, MAV.theta0)) # initial state: phi, theta
+        self.xhat = np.vstack((MAV.phi0, MAV.theta0))#np.vstack((MAV.phi0, MAV.theta0)) # initial state: phi, theta
         self.P = np.eye(2)
         self.Ts = SIM.ts_control/self.N
 
@@ -123,49 +125,61 @@ class ekf_attitude:
 
     def propagate_model(self, state, measurement):
         # model propagation
-        for i in range(0, self.N):
-            phi = self.xhat[0]
-            theta = self.xhat[1]
+        phi = state.phi
+        theta = state.theta
+        for i in range(0, self.N): 
             # propagate model
             self.xhat += self.Ts * self.f(self.xhat, state, measurement)
             # compute Jacobian
             A = jacobian(self.f, self.xhat, state, measurement)
             # compute G matrix for gyro noise, map gyro noise in control space to state space,
             G = np.array([
-                [1, sin(phi)*tan(theta), cos(phi)*tan(theta)],
-                [0, cos(phi), sin(phi)]
+                [1.0, sin(phi)*tan(theta), cos(phi)*tan(theta)],
+                [0.0, cos(phi), -sin(phi)]
                 ])
             # update P with continuous time model
             # self.P = self.P + self.Ts * (A @ self.P + self.P @ A.T + self.Q + G @ self.Q_gyro @ G.T)
             # convert to discrete time models
-            A_d = np.eye(len(A)) + A*self.Ts + A @ A * self.Ts**2/2
+            A_d = np.eye(len(A)) + A * self.Ts + (A @ A) * (self.Ts**2)/2.0
             G_d = self.Ts * G
             # update P with discrete time model
-            self.P = self.P + self.Ts * (A_d @ self.P + self.P @ A_d.T + self.Q + G_d @ self.Q_gyro @ G_d.T)
+            self.P = A_d @ self.P @ A_d.T + self.Q * self.Ts**2 + G_d @ self.Q_gyro @ G_d.T
 
     def measurement_update(self, state, measurement):
         # measurement updates
-        threshold = 2.0
         h = self.h(self.xhat, state, measurement)
         C = jacobian(self.h, self.xhat, state, measurement)
         y = np.vstack((measurement.accel_x, measurement.accel_y, measurement.accel_z))
-        S_inv = np.linalg.inv(self.R_accel + C @ self.P @ C.T)
-        if stats.chi2.sf((y-h).T @ S_inv @ (y-h), df=3) > 0.01:
-            L = self.P @ C.T @ np.linalg.inv(self.R_accel + C @ self.P @ C.T)
-            self.P = (np.eye(2) - L @ C) @ self.P @ (np.eye(2) - L @ C).T + L @ np.atleast_2d(self.R_accel) @ L.T
-            self.xhat = self.xhat + L @ np.atleast_2d(y - h)
+        L = self.P @ C.T @ np.linalg.inv(self.R_accel + C @ self.P @ C.T)
+        self.xhat = self.xhat + L @ (y - h)
+        tmp = np.eye(2) - L @ C
+        self.P = tmp @ self.P @ tmp.T + L @ self.R_accel @ L.T
+
+        # S_inv = np.linalg.inv(self.R_accel + C @ self.P @ C.T)
+        # if stats.chi2.sf((y-h).T @ S_inv @ (y-h), df=3) > 0.01:
+        #     L = self.P @ C.T @ S_inv
+        #     self.P = (np.eye(2) - L @ C) @ self.P @ (np.eye(2) - L @ C).T + L @ self.R_accel @ L.T
+        #     self.xhat = self.xhat + L @ (y - h)
 
 class ekf_position:
     # implement continous-discrete EKF to estimate pn, pe, chi, Vg
     def __init__(self):
         noise_param_state = 1e-10
-        self.Q = np.eye(7)*noise_param_state
-        self.R = np.diag([SENSOR.gps_n_sigma**2, SENSOR.gps_e_sigma**2,  SENSOR.gps_Vg_sigma**2, SENSOR.gps_course_sigma**2,]) 
-        self.R_pseudo = np.eye(2)*1e-5
+        self.Q = np.diag((
+            1e-5,#pn
+            1e-5,#pe
+            1e-10,#Vg
+            1e-10,#Chi
+            10,#wn
+            10,#we
+            1e-2#psi
+        ))
+        self.R_gps = np.diag([SENSOR.gps_n_sigma**2, SENSOR.gps_e_sigma**2,  SENSOR.gps_Vg_sigma**2, SENSOR.gps_course_sigma**2,]) 
+        self.R_pseudo = np.eye(2)*1e-2
         self.N = 5  # number of prediction step per sample
         self.Ts = (SIM.ts_control / self.N)
         chi_0 = 0
-        self.xhat = np.vstack((MAV.pn0, MAV.pe0, MAV.Va0, chi_0, MAV.w0, MAV.w0, MAV.psi0))
+        self.xhat = np.vstack((MAV.pn0, MAV.pe0, MAV.Va0, chi_0, MAV.w0, MAV.w0, MAV.psi0))#np.vstack((0.0,0.0,25.0,0.0,0.0,0.0,0.0))
         self.P = np.eye(7)
         self.gps_n_old = 9999
         self.gps_e_old = 9999
@@ -203,9 +217,9 @@ class ekf_position:
         theta = state.theta
         phi = state.phi
 
-        chidot = MAV.gravity/Vg*tan(phi)
+        chidot = MAV.gravity/Vg*tan(phi)*cos(chi-psi)
         psidot = q*sin(phi)/cos(theta) + r*cos(phi)/cos(theta)
-        Vgdot = ((Va*cos(psi) + wn)*(-Va*psidot*sin(psi)) + (Va*sin(psi) + we)*(Va*psidot*cos(psi)))/Vg
+        Vgdot = ((Va*cos(psi) + wn) * (-Va*psidot*sin(psi)) + (Va*sin(psi) + we)*(Va*psidot*cos(psi)))*1/Vg
         _f = np.vstack((pndot, pedot, Vgdot, chidot, 0, 0, psidot))
         return _f
 
@@ -216,8 +230,6 @@ class ekf_position:
 
     def h_pseudo(self, x, state, measurement):
         # measurement model for wind triangale pseudo measurement
-        pn = x.item(0)
-        pe = x.item(1)
         Vg = x.item(2)
         chi = x.item(3)
         wn = x.item(4)
@@ -241,20 +253,19 @@ class ekf_position:
             # convert to discrete time models
             A_d = np.eye(len(A)) + A*self.Ts + A @ A * self.Ts**2/2
             # update P with discrete time model
-            self.P = self.P + self.Ts * (A_d @ self.P + self.P @ A_d.T + self.Q)
+            self.P = A_d @ self.P @ A_d.T + self.Ts**2*self.Q
 
     def measurement_update(self, state, measurement):
         # always update based on wind triangle pseudo measurement
         h = self.h_pseudo(self.xhat, state, measurement)
         C = jacobian(self.h_pseudo, self.xhat, state, measurement)
-        y = np.vstack((0, 0))
-        P_update = self.P[4:6, 4:6]
-        C_update = C[:, 4:6]
-        Sinv = np.linalg.inv(self.R_pseudo + C_update @  P_update  @ C_update.T)
-        L =  P_update  @ C_update.T @ Sinv
-        tmp = np.eye(2) - L @ C_update
-        self.P[4:6, 4:6]  = tmp @ P_update @ tmp.T + L @ self.R_pseudo @ L.T
-        self.xhat[4:6] = self.xhat[4:6] + L @ (y - h)
+        y = np.vstack((0, 0))  
+        L = self.P @ C.T @ np.linalg.inv(self.R_pseudo + C @ self.P @ C.T)
+
+        self.xhat = self.xhat + L @ (y - h)
+        I = np.eye(7)
+        tmp = (I - L @ C)
+        self.P = tmp @ self.P @ tmp.T + L @ self.R_pseudo @ L.T
 
         # only update GPS when one of the signals changes
         if (measurement.gps_n != self.gps_n_old) \
@@ -265,19 +276,24 @@ class ekf_position:
             h = self.h_gps(self.xhat, state, measurement)
             C = jacobian(self.h_gps, self.xhat, state, measurement)
             y = np.vstack((measurement.gps_n, measurement.gps_e, measurement.gps_Vg, measurement.gps_course))
-            P_update = self.P[0:4, 0:4]
-            C_update = C[:, 0:4]
+            L = self.P @ C.T @ np.linalg.inv(self.R_gps + C @ self.P @ C.T)
 
-            Sinv = np.linalg.inv(self.R + C_update @  P_update  @ C_update.T)
-            L =  P_update  @ C_update.T @ Sinv
-            tmp = np.eye(4) - L @ C_update
-            P_update  = tmp @ P_update @ tmp.T + L @ self.R @ L.T
-            self.xhat[0:4] = self.xhat[0:4] + L @ (y - h)
-            # update stored GPS signals
+            y[3,0] = self.wrap(y[3,0], h[3,0])
+            self.xhat = self.xhat + L @ (y - h)
+            tmp = np.eye(7) - L @ C
+            self.P = tmp @ self.P @ tmp.T + L @ self.R_gps @ L.T
+
             self.gps_n_old = measurement.gps_n
             self.gps_e_old = measurement.gps_e
             self.gps_Vg_old = measurement.gps_Vg
             self.gps_course_old = measurement.gps_course
+
+    def wrap(self, chi_c, chi):
+        while chi_c-chi > np.pi:
+            chi_c = chi_c - 2.0 * np.pi
+        while chi_c-chi < -np.pi:
+            chi_c = chi_c + 2.0 * np.pi
+        return chi_c
 
 def jacobian(fun, x, state, measurement):
     # compute jacobian of fun with respect to x
