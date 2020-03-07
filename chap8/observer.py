@@ -166,20 +166,20 @@ class ekf_position:
     def __init__(self):
         noise_param_state = 1e-10
         self.Q = np.diag((
-            1e-5,#pn
-            1e-5,#pe
+            1e-3,#pn
+            1e-3,#pe
             1e-10,#Vg
-            1e-10,#Chi
+            1e-3,#Chi
             10,#wn
             10,#we
-            1e-2#psi
+            1e-1#psi
         ))
         self.R_gps = np.diag([SENSOR.gps_n_sigma**2, SENSOR.gps_e_sigma**2,  SENSOR.gps_Vg_sigma**2, SENSOR.gps_course_sigma**2,]) 
         self.R_pseudo = np.eye(2)*1e-2
         self.N = 5  # number of prediction step per sample
         self.Ts = (SIM.ts_control / self.N)
         chi_0 = 0
-        self.xhat = np.vstack((MAV.pn0, MAV.pe0, MAV.Va0, chi_0, MAV.w0, MAV.w0, MAV.psi0))#np.vstack((0.0,0.0,25.0,0.0,0.0,0.0,0.0))
+        self.xhat = np.vstack((0.0,0.0,25.0,0.0,0.0,0.0,0.0))#np.vstack((MAV.pn0, MAV.pe0, MAV.Va0, chi_0, MAV.w0, MAV.w0, MAV.psi0))
         self.P = np.eye(7)
         self.gps_n_old = 9999
         self.gps_e_old = 9999
