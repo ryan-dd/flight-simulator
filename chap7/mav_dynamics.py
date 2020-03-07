@@ -106,25 +106,22 @@ class mavDynamics:
 
     def sensors(self):
         "Return value of sensors on MAV: gyros, accels, static_pressure, dynamic_pressure, GPS"
-        state = self._state
-        pn = state.item(0)
-        pe = state.item(1)
-        pd = state.item(2)
-        u = state.item(3)
-        v = state.item(4)
-        w = state.item(5)
-        e0 = state.item(6)
-        e1 = state.item(7)
-        e2 = state.item(8)
-        e3 = state.item(9)
-        p = state.item(10)
-        q = state.item(11)
-        r = state.item(12)
-        phi, theta, psi = Quaternion2Euler([e0, e1, e2, e3])
+        state = self.true_state
+        pn = state.pn
+        pe = state.pe
+        h = state.h
+        pd = -h
+        p = state.p
+        q = state.q
+        r = state.r
+        phi = state.phi
+        theta = state.theta
+        psi = state.psi
         g = MAV.gravity
         fx = self._forces[0]
         fy = self._forces[1]
         fz = self._forces[2]
+        Va = state.Va
 
         self._sensors.gyro_x = p + SENSOR.gyro_x_bias + np.random.normal(0, SENSOR.gyro_sigma)
         self._sensors.gyro_y = q + SENSOR.gyro_y_bias + np.random.normal(0, SENSOR.gyro_sigma)
@@ -141,16 +138,16 @@ class mavDynamics:
             self._gps_eta_n = np.exp(-SENSOR.gps_k*SENSOR.ts_gps)* self._gps_eta_n + np.random.normal(0, SENSOR.gps_n_sigma)
             self._gps_eta_e = np.exp(-SENSOR.gps_k*SENSOR.ts_gps)* self._gps_eta_e + np.random.normal(0, SENSOR.gps_e_sigma)
             self._gps_eta_h = np.exp(-SENSOR.gps_k*SENSOR.ts_gps)* self._gps_eta_h + np.random.normal(0, SENSOR.gps_h_sigma)
-            self._sensors.gps_n = self._state.item(0) + self._gps_eta_n
-            self._sensors.gps_e = self._state.item(1) + self._gps_eta_e
-            self._sensors.gps_h = -self._state.item(2) + self._gps_eta_h
-            Va = self._Va
-            wn = self._wind[0]
-            we = self._wind[1]
-            wd = self._wind[2]
-            self._sensors.gps_Vg = (np.sqrt((Va*cos(psi)+wn)**2 + (Va*sin(psi+we))**2) + np.random.normal(0, SENSOR.gps_Vg_sigma)).item(0)
-            self._sensors.gps_course = (np.arctan2((Va*sin(psi+we)), (Va*cos(psi)+wn)) + np.random.normal(0, SENSOR.gps_course_sigma)).item(0)
-            self._t_gps = 0
+            self._sensors.gps_n = pn + self._gps_eta_n
+            self._sensors.gps_e = pe + self._gps_eta_e
+            self._sensors.gps_h = -pd + self._gps_eta_h
+            wn = state.wn
+            we = state.we
+            V1 = Va*np.sin(psi) + we
+            V2 = Va*np.cos(psi) + wn     
+            self._sensors.gps_Vg = (np.sqrt(V1**2 + V2**2) + np.random.normal(0, SENSOR.gps_Vg_sigma)).item(0)
+            self._sensors.gps_course = (np.arctan2(V1, V2) + np.random.normal(0, SENSOR.gps_course_sigma)).item(0)
+            self._t_gps = 0.
         else:
             self._t_gps += self._ts_simulation
         return self._sensors
