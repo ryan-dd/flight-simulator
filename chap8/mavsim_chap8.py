@@ -23,8 +23,8 @@ VIDEO = False  # True==write video, False==don't write video
 mav_view = mavViewer()  # initialize the mav viewer
 data_view = dataViewer()  # initialize view of data plots
 if VIDEO == True:
-    from chap2.video_writer import video_writer
-    video = video_writer(video_name="chap8_video.avi",
+    from chap2.video_writer import videoWriter
+    video = videoWriter(video_name="chap8_video.avi",
                          bounding_box=(0, 0, 1000, 1000),
                          output_rate=SIM.ts_video)
 
