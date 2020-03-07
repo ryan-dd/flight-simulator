@@ -16,7 +16,7 @@ delta_e_max = np.radians(45)
 #----------roll loop-------------
 # get transfer function data for delta_a to phi
 zeta_roll = 0.707
-roll_e_max = np.radians(20)
+roll_e_max = np.radians(90)
 
 roll_kp = delta_a_max / roll_e_max
 wn_roll = np.sqrt(np.abs(TF.a_phi2)*roll_kp)
@@ -42,8 +42,8 @@ yaw_damper_tau_r = 0.05
 yaw_damper_kp = -0.03
 
 #----------pitch loop-------------
-e_max_pitch = np.radians(10)
-zeta_pitch = 1.7
+e_max_pitch = np.radians(13)
+zeta_pitch = 0.4
 
 pitch_kp = delta_e_max/e_max_pitch*np.sign(TF.a_theta3)
 wn_pitch = np.sqrt(TF.a_theta2 + pitch_kp*TF.a_theta3)
@@ -57,7 +57,7 @@ wn_altitude = 1/Wh*wn_pitch
 zeta_altitude = 1.4
 altitude_kp = 2*zeta_altitude*wn_altitude/(K_theta_DC*Va)
 altitude_ki = wn_altitude**2/(K_theta_DC*Va)
-altitude_zone = 3 # moving saturation limit around current altitude
+altitude_zone = 4 # moving saturation limit around current altitude
 
 #---------airspeed hold using throttle---------------
 wn_throttle = 7
