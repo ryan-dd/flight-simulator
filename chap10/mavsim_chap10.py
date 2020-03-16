@@ -9,10 +9,10 @@ sys.path.append('..')
 import numpy as np
 import parameters.simulation_parameters as SIM
 
-from chap3.data_viewer import data_viewer
-from chap4.wind_simulation import wind_simulation
+from chap3.data_viewer import dataViewer
+from chap4.wind_simulation import windSimulation
 from chap6.autopilot import autopilot
-from chap7.mav_dynamics import mav_dynamics
+from chap7.mav_dynamics import mavDynamics
 from chap8.observer import observer
 from chap10.path_follower import path_follower
 from chap10.path_viewer import path_viewer
@@ -20,7 +20,7 @@ from chap10.path_viewer import path_viewer
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
 path_view = path_viewer()  # initialize the viewer
-data_view = data_viewer()  # initialize view of data plots
+data_view = dataViewer()  # initialize view of data plots
 if VIDEO == True:
     from chap2.video_writer import video_writer
     video = video_writer(video_name="chap10_video.avi",
@@ -28,16 +28,16 @@ if VIDEO == True:
                          output_rate=SIM.ts_video)
 
 # initialize elements of the architecture
-wind = wind_simulation(SIM.ts_simulation)
-mav = mav_dynamics(SIM.ts_simulation)
+wind = windSimulation(SIM.ts_simulation)
+mav = mavDynamics(SIM.ts_simulation)
 ctrl = autopilot(SIM.ts_simulation)
 obsv = observer(SIM.ts_simulation)
 path_follow = path_follower()
 
 # path definition
-from message_types.msg_path import msg_path
-path = msg_path()
-path.flag = 'line'
+from message_types.msg_path import msgPath
+path = msgPath()
+path.flag = 'orbit'
 #path.flag = 'orbit'
 if path.flag == 'line':
     path.line_origin = np.array([[0.0, 0.0, -100.0]]).T
