@@ -8,7 +8,7 @@ from message_types.msg_autopilot import msgAutopilot
 class path_follower:
     def __init__(self):
         self.chi_inf = np.radians(60)  # approach angle for large distance from straight-line path
-        self.k_path = 0.009 # proportional gain for straight-line path following
+        self.k_path = 0.011 # proportional gain for straight-line path following
         self.k_orbit = 2  # proportional gain for orbit following
         self.gravity = 9.8
         self.autopilot_commands = msgAutopilot()  # message sent to autopilot
@@ -28,7 +28,7 @@ class path_follower:
             [np.cos(chi_q), np.sin(chi_q), 0],
             [-np.sin(chi_q), np.cos(chi_q), 0],
             [0,0,1]])
-        p_i = np.vstack((state.pn, state.pe, state.h))
+        p_i = np.vstack((state.pn, state.pe, -state.h))
         r_i = path.line_origin
         e_p = Rip @ (p_i - r_i)
         ei_p = p_i - r_i
@@ -36,16 +36,16 @@ class path_follower:
         ki = np.vstack((0,0,1))
         q_cross_k = np.cross(q.flatten(), ki.flatten())
         unit_vec_norm_to_qk_plane = (q_cross_k/np.linalg.norm(q_cross_k))[:,None]
-        si = ei_p - (ei_p @ unit_vec_norm_to_qk_plane.T) @ unit_vec_norm_to_qk_plane
+        si = ei_p - (ei_p @ unit_vec_norm_to_qk_plane.T) * unit_vec_norm_to_qk_plane
         
         self.autopilot_commands.airspeed_command = path.airspeed
-        self.autopilot_commands.course_command = chi_q-self.chi_inf*2/np.pi*np.arctan(self.k_path*e_p.item(1))
+        self.autopilot_commands.course_command = chi_q - self.chi_inf*2/np.pi*np.arctan(self.k_path*e_p.item(1))
         sn = si.item(0)
         se = si.item(1)
         qn = q.item(0)
         qe = q.item(1)
         qd = q.item(2)
-        self.autopilot_commands.altitude_command = state.h - np.sqrt(sn**2 + se**2)*(qd/(np.sqrt(qn**2 + qe**2)))
+        self.autopilot_commands.altitude_command = -r_i.item(2) - np.sqrt(sn**2 + se**2)*(qd/(np.sqrt(qn**2 + qe**2)))
         self.autopilot_commands.phi_feedforward = self._calculate_phi_feedforward(path, state, chi)
 
     def _calculate_phi_feedforward(self, path, state, chi):

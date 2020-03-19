@@ -166,8 +166,8 @@ class ekf_position:
     def __init__(self):
         noise_param_state = 1e-10
         self.Q = np.diag((
-            1e-3,#pn
-            1e-3,#pe
+            1e3,#pn
+            1e3,#pe
             1e-10,#Vg
             1e-3,#Chi
             10,#wn
