@@ -18,12 +18,12 @@ from chap10.path_follower import path_follower
 from chap10.path_viewer import path_viewer
 
 # initialize the visualization
-VIDEO = False  # True==write video, False==don't write video
+VIDEO = True  # True==write video, False==don't write video
 path_view = path_viewer()  # initialize the viewer
 data_view = dataViewer()  # initialize view of data plots
 if VIDEO == True:
-    from chap2.video_writer import video_writer
-    video = video_writer(video_name="chap10_video.avi",
+    from chap2.video_writer import videoWriter
+    video = videoWriter(video_name="chap10_video.avi",
                          bounding_box=(0, 0, 1000, 1000),
                          output_rate=SIM.ts_video)
 
@@ -37,8 +37,8 @@ path_follow = path_follower()
 # path definition
 from message_types.msg_path import msgPath
 path = msgPath()
-path.flag = 'line'
-#path.flag = 'orbit'
+#path.flag = 'line'
+path.flag = 'orbit'
 if path.flag == 'line':
     path.line_origin = np.array([[0.0, 0.0, -100.0]]).T
     path.line_direction = np.array([[0.5, 1.0, 0.0]]).T
