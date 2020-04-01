@@ -79,10 +79,11 @@ class path_manager:
             norm_diff = (q_prev - q_curr)/np.linalg.norm(q_prev-q_curr)
             self.path.orbit_center = w_curr - radius/np.sin(psi/2) * norm_diff
             self.path.orbit_radius = radius
-            self.path.orbit_direction = np.sign(q_prev.item(0)*q_curr.item(1) - q_prev.item(1)*q_curr.item(0))
+            self.path.orbit_direction = self.orbit_direction_string(np.sign(q_prev.item(0)*q_curr.item(1) - q_prev.item(1)*q_curr.item(0)))
             self.halfspace_r = w_curr + (radius/np.tan(psi/2)) * q_curr
             self.halfspace_n = q_curr
             if self.inHalfSpace(p):
+                self.manager_state = 1
                 if self.ptr_current <= waypoints.num_waypoints-1:
                     self.increment_pointers()
         self.path.line_origin = w_prev

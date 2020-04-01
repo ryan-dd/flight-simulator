@@ -12,10 +12,10 @@ size_waypoint_array = 100
 Va0 = MAV.u0
 
 # max possible roll angle
-phi_max = np.radians(45)
+phi_max = np.radians(20)
 
 # minimum turn radius
-R_min = 45
+R_min = Va0**2 / MAV.gravity / np.tan(phi_max)
 
 # create random city map
 city_width      = 2000  # the city is of size (width)x(width)
