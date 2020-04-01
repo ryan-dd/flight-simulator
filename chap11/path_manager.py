@@ -14,6 +14,7 @@ class path_manager:
         self.ptr_next = 2
         # flag that request new waypoints from path planner
         self.flag_need_new_waypoints = True
+        self.delay = False
         self.halfspace_n = np.inf * np.ones((3,1))
         self.halfspace_r = np.inf * np.ones((3,1))
         # state of the manager state machine
@@ -23,8 +24,11 @@ class path_manager:
 
     def update(self, waypoints, radius, state):
         # this flag is set for one time step to signal a redraw in the viewer
-        if self.path.flag_path_changed == True:
+        if self.path.flag_path_changed:
             self.path.flag_path_changed = False
+            self.delay = False
+        if self.delay:
+            self.path.flag_path_changed = True
         if waypoints.num_waypoints == 0:
             waypoints.flag_manager_requests_waypoints = True
         else:
@@ -50,10 +54,10 @@ class path_manager:
         self.halfspace_r = w_curr
         self.halfspace_n = q_curr + q_prev/(np.linalg.norm(q_curr + q_prev))
         if self.inHalfSpace(p):
-            if self.ptr_current <= waypoints.num_waypoints-1:
-                self.increment_pointers()
-        self.path.line_origin = w_prev
-        self.path.line_direction = q_prev
+            self.increment_pointers()
+            self.delay = True
+        # self.path.line_origin = w_prev
+        # self.path.line_direction = q_prev
             
 
     def fillet_manager(self, waypoints, radius, state):
@@ -74,6 +78,7 @@ class path_manager:
             self.halfspace_n = q_prev
             if self.inHalfSpace(p):
                 self.manager_state = 2
+                self.delay = True
         elif self.manager_state == 2:
             self.path.type = 'orbit'
             norm_diff = (q_prev - q_curr)/np.linalg.norm(q_prev-q_curr)
@@ -84,23 +89,76 @@ class path_manager:
             self.halfspace_n = q_curr
             if self.inHalfSpace(p):
                 self.manager_state = 1
-                if self.ptr_current <= waypoints.num_waypoints-1:
-                    self.increment_pointers()
-        self.path.line_origin = w_prev
-        self.path.line_direction = q_prev
+                self.increment_pointers(waypoints)
+                self.delay = True
+        # self.path.line_origin = w_prev
+        # self.path.line_direction = q_prev
 
     def dubins_manager(self, waypoints, radius, state):
-        pass
+        p = np.array([[state.pn], [state.pe], [-state.h]])
+        w_prev = (waypoints.ned[:, self.ptr_previous]).reshape(-1,1)
+        chi_prev = waypoints.course.item(self.ptr_previous)
+        w_curr = (waypoints.ned[:, self.ptr_current]).reshape(-1,1)
+        chi_curr = waypoints.course.item(self.ptr_current)
+        self.dubins_path.update(w_prev, chi_prev, w_curr, chi_curr, radius)
+        if self.manager_state == 1:
+            self.path.type = 'orbit'
+            self.path.orbit_center = self.dubins_path.center_s
+            self.path.orbit_radius = self.dubins_path.radius
+            self.path.orbit_direction = self.orbit_direction_string(self.dubins_path.dir_s)
+            self.halfspace_r = self.dubins_path.r1
+            self.halfspace_n = -self.dubins_path.n1
+            if self.inHalfSpace(p):
+                self.manager_state = 2
+                self.delay = True
+        elif self.manager_state == 2:
+            self.halfspace_r = self.dubins_path.r1
+            self.halfspace_n = self.dubins_path.n1
+            if self.inHalfSpace(p):
+                self.manager_state = 3
+                self.delay = True
+        elif self.manager_state == 3:
+            self.path.type = 'line'
+            self.path.line_origin = self.dubins_path.r1
+            self.path.line_direction = self.dubins_path.n1
+            self.halfspace_r = self.dubins_path.r2
+            self.halfspace_n = self.dubins_path.n1
+            if self.inHalfSpace(p):
+                self.manager_state = 4
+                self.delay = True
+        elif self.manager_state == 4:
+            self.path.type = 'orbit'
+            self.path.orbit_center = self.dubins_path.center_e
+            self.path.orbit_radius = self.dubins_path.radius
+            self.path.orbit_direction = self.orbit_direction_string(self.dubins_path.dir_e)
+            self.halfspace_r = self.dubins_path.r3
+            self.halfspace_n = -self.dubins_path.n3
+            if self.inHalfSpace(p):
+                self.manager_state = 5
+                self.delay = True
+        elif self.manager_state == 5:
+            self.halfspace_n = self.dubins_path.n3
+            if self.inHalfSpace(p):
+                self.manager_state = 1
+                self.increment_pointers(waypoints)
+                self.delay = True
+        
 
     def initialize_pointers(self):
         self.ptr_previous = 0
         self.ptr_current = 1
         self.ptr_next = 2
 
-    def increment_pointers(self):
+    def increment_pointers(self, waypoints):
         self.ptr_previous += 1
         self.ptr_current += 1
         self.ptr_next += 1
+        if self.ptr_previous == waypoints.num_waypoints:
+            self.ptr_previous = 0
+        if self.ptr_current == waypoints.num_waypoints:
+            self.ptr_current = 0
+        if self.ptr_next == waypoints.num_waypoints:
+            self.ptr_next = 0
 
     def inHalfSpace(self, pos):
         if (pos - self.halfspace_r).T @ self.halfspace_n >= 0:

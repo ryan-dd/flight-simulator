@@ -41,8 +41,8 @@ path_manage = path_manager()
 from message_types.msg_waypoints import msgWaypoints
 waypoints = msgWaypoints()
 #waypoints.type = 'straight_line'
-waypoints.type = 'fillet'
-# waypoints.type = 'dubins'
+#waypoints.type = 'fillet'
+waypoints.type = 'dubins'
 waypoints.num_waypoints = 4
 Va = PLAN.Va0
 waypoints.ned = np.array(
@@ -61,6 +61,7 @@ waypoints.course = np.array(
 # initialize the simulation time
 sim_time = SIM.start_time
 plot_time = 0
+init = False 
 # main simulation loop
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
@@ -82,10 +83,7 @@ while sim_time < SIM.end_time:
     mav.update(delta, current_wind)  # propagate the MAV dynamics
 
     #-------update viewer-------------    
-    plot_time += SIM.ts_simulation
-    if plot_time > SIM.ts_simulation*20:
-        plot_time = 0
-        waypoint_view.update(waypoints, path, mav.true_state)  # plot path and MAV
+    waypoint_view.update(waypoints, path, mav.true_state)  # plot path and MAV
     data_view.update(mav.true_state, # true states
                      estimated_state, # estimated states
                      commanded_state, # commanded states

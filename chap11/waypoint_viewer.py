@@ -211,7 +211,8 @@ class waypoint_viewer():
                                           #mode='line_strip')
             self.window.addItem(self.path)
         else:
-            self.path.setData(pos=points)
+            path_color = np.tile(red, (points.shape[0], 1))
+            self.path.setData(pos=points, color=path_color)
 
     def straight_line_points(self, path):
         points = np.array([[path.line_origin.item(0),
