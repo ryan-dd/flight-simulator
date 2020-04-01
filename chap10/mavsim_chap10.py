@@ -18,7 +18,7 @@ from chap10.path_follower import path_follower
 from chap10.path_viewer import path_viewer
 
 # initialize the visualization
-VIDEO = True  # True==write video, False==don't write video
+VIDEO = False  # True==write video, False==don't write video
 path_view = path_viewer()  # initialize the viewer
 data_view = dataViewer()  # initialize view of data plots
 if VIDEO == True:
@@ -37,8 +37,8 @@ path_follow = path_follower()
 # path definition
 from message_types.msg_path import msgPath
 path = msgPath()
-#path.flag = 'line'
-path.flag = 'orbit'
+path.flag = 'line'
+#path.flag = 'orbit'
 if path.flag == 'line':
     path.line_origin = np.array([[0.0, 0.0, -100.0]]).T
     path.line_direction = np.array([[0.5, 1.0, 0.0]]).T
@@ -50,7 +50,7 @@ else:  # path.flag == 'orbit'
 
 # initialize the simulation time
 sim_time = SIM.start_time
-
+plot_time = 0
 # main simulation loop
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
@@ -69,13 +69,16 @@ while sim_time < SIM.end_time:
     current_wind = wind.update()  # get the new wind vector
     mav.update(delta, current_wind)  # propagate the MAV dynamics
 
-    #-------update viewer-------------
-    path_view.update(path, mav.true_state)  # plot path and MAV
-    data_view.update(mav.true_state, # true states
-                     estimated_state, # estimated states
-                     commanded_state, # commanded states
-                     SIM.ts_simulation)
-    if VIDEO == True: video.update(sim_time)
+    plot_time += SIM.ts_simulation
+    if plot_time > SIM.ts_simulation*10:
+        plot_time = 0
+        #-------update viewer-------------
+        path_view.update(path, mav.true_state)  # plot path and MAV
+        data_view.update(mav.true_state, # true states
+                        estimated_state, # estimated states
+                        commanded_state, # commanded states
+                        SIM.ts_simulation)
+        if VIDEO == True: video.update(sim_time)
 
     #-------increment time-------------
     sim_time += SIM.ts_simulation

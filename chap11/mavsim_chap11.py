@@ -10,10 +10,10 @@ import numpy as np
 import parameters.simulation_parameters as SIM
 import parameters.planner_parameters as PLAN
 
-from chap3.data_viewer import data_viewer
-from chap4.wind_simulation import wind_simulation
+from chap3.data_viewer import dataViewer
+from chap4.wind_simulation import windSimulation
 from chap6.autopilot import autopilot
-from chap7.mav_dynamics import mav_dynamics
+from chap7.mav_dynamics import mavDynamics
 from chap8.observer import observer
 from chap10.path_follower import path_follower
 from chap11.path_manager import path_manager
@@ -22,45 +22,45 @@ from chap11.waypoint_viewer import waypoint_viewer
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
 waypoint_view = waypoint_viewer()  # initialize the viewer
-data_view = data_viewer()  # initialize view of data plots
+data_view = dataViewer()  # initialize view of data plots
 if VIDEO == True:
-    from chap2.video_writer import video_writer
+    from chap2.video_writer import videoWriter
     video = video_writer(video_name="chap11_video.avi",
                          bounding_box=(0, 0, 1000, 1000),
                          output_rate=SIM.ts_video)
 
 # initialize elements of the architecture
-wind = wind_simulation(SIM.ts_simulation)
-mav = mav_dynamics(SIM.ts_simulation)
+wind = windSimulation(SIM.ts_simulation)
+mav = mavDynamics(SIM.ts_simulation)
 ctrl = autopilot(SIM.ts_simulation)
 obsv = observer(SIM.ts_simulation)
 path_follow = path_follower()
 path_manage = path_manager()
 
 # waypoint definition
-from message_types.msg_waypoints import msg_waypoints
-waypoints = msg_waypoints()
+from message_types.msg_waypoints import msgWaypoints
+waypoints = msgWaypoints()
 #waypoints.type = 'straight_line'
-#waypoints.type = 'fillet'
-waypoints.type = 'dubins'
+waypoints.type = 'fillet'
+# waypoints.type = 'dubins'
 waypoints.num_waypoints = 4
 Va = PLAN.Va0
-waypoints.ned[:, 0:waypoints.num_waypoints] \
-    = np.array([[0, 0, -100],
-                [1000, 0, -100],
-                [0, 1000, -100],
-                [1000, 1000, -100]]).T
-waypoints.airspeed[:, 0:waypoints.num_waypoints] \
-    = np.array([[Va, Va, Va, Va]])
-waypoints.course[:, 0:waypoints.num_waypoints] \
-    = np.array([[np.radians(0),
-                 np.radians(45),
-                 np.radians(45),
-                 np.radians(-135)]])
+waypoints.ned = np.array(
+    [[0, 0, -100],
+    [1000, 0, -100],
+    [0, 1000, -100],
+    [1000, 1000, -100]]).T
+waypoints.airspeed = np.array(
+    [[Va, Va, Va, Va]])
+waypoints.course = np.array(
+    [[np.radians(0),
+    np.radians(45),
+    np.radians(45),
+    np.radians(-135)]])
 
 # initialize the simulation time
 sim_time = SIM.start_time
-
+plot_time = 0
 # main simulation loop
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
@@ -81,8 +81,11 @@ while sim_time < SIM.end_time:
     current_wind = wind.update()  # get the new wind vector
     mav.update(delta, current_wind)  # propagate the MAV dynamics
 
-    #-------update viewer-------------
-    waypoint_view.update(waypoints, path, mav.true_state)  # plot path and MAV
+    #-------update viewer-------------    
+    plot_time += SIM.ts_simulation
+    if plot_time > SIM.ts_simulation*20:
+        plot_time = 0
+        waypoint_view.update(waypoints, path, mav.true_state)  # plot path and MAV
     data_view.update(mav.true_state, # true states
                      estimated_state, # estimated states
                      commanded_state, # commanded states
