@@ -77,8 +77,8 @@ class dubins_parameters:
                 self.center_e = cre
                 self.dir_e = 1
                 q1 = (self.center_e - self.center_s)/np.linalg.norm((self.center_e - self.center_s))
-                z1 = self.center_s + R*rotz(-np.pi/2) * q1
-                z2 = self.center_e + R*rotz(-np.pi/2) * q1
+                z1 = self.center_s + R*rotz(-np.pi/2) @ q1
+                z2 = self.center_e + R*rotz(-np.pi/2) @ q1
                 self.n1 = q1
                 self.r1 = z1
                 self.r2 = z2
@@ -88,8 +88,8 @@ class dubins_parameters:
                 self.center_e = cle
                 self.dir_e = -1
                 q1 = (self.center_e - self.center_s)/np.linalg.norm((self.center_e - self.center_s))
-                z1 = self.center_s + R*rotz(np.pi/2)*q1
-                z2 = self.center_e + R*rotz(np.pi/2)*q1
+                z1 = self.center_s + R*rotz(np.pi/2) @ q1
+                z2 = self.center_e + R*rotz(np.pi/2) @ q1
                 self.n1 = q1
                 self.r1 = z1
                 self.r2 = z2
