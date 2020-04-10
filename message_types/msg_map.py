@@ -8,7 +8,8 @@ part of mavsim_python
         4/10/2019 - RWB
 """
 import numpy as np
-import parameters.planner_parameters as PLAN
+# import parameters.planner_parameters as PLAN
+from random import random
 
 class msgMap:
     def __init__(self):
@@ -32,3 +33,23 @@ class msgMap:
             self.building_north[0, i] = 0.5 * (PLAN.city_width / PLAN.num_blocks) * (2 * i + 1)
         # east coordinate of center of buildings
         self.building_east = np.copy(self.building_north)
+
+class msgMyMap:
+    def __init__(self, num_buildings, bounds):
+        self.all_buildings = [self.make_building() for i in range(num_buildings)]
+    
+    def make_building(self):
+        height = np.random.rand()*150+50
+        n = np.random.rand(0+bounds/2, bounds-bounds/2)
+        e = np.random.rand(0+bounds/2, bounds-bounds/2)
+        return Building(height, n, e)
+         
+class Building():
+    def __init__(self, height, n, e):
+        self.height = height
+        self.n = n
+        self.e = e
+            
+
+if __name__ == "__main__":
+    map_ = msgMyMap(3, 4)

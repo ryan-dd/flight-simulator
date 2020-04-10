@@ -54,10 +54,10 @@ class path_manager:
         self.halfspace_r = w_curr
         self.halfspace_n = q_curr + q_prev/(np.linalg.norm(q_curr + q_prev))
         if self.inHalfSpace(p):
-            self.increment_pointers()
+            self.increment_pointers(waypoints)
             self.delay = True
-        # self.path.line_origin = w_prev
-        # self.path.line_direction = q_prev
+        self.path.line_origin = w_prev
+        self.path.line_direction = q_prev
             
 
     def fillet_manager(self, waypoints, radius, state):

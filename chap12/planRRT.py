@@ -9,8 +9,6 @@ class planRRT():
 
     def planPath(self, wpp_start, wpp_end, map):
 
-
-
         # desired down position is down position of end node
         pd = wpp_end.item(2)
 

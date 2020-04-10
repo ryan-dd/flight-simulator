@@ -39,14 +39,14 @@ class world_viewer():
 
     ###################################
     # public functions
-    def update(self, map, waypoints, path, state):
+    def update(self, map_, waypoints, path, state):
 
         # initialize the drawing the first time update() is called
         if not self.plot_initialized:
             self.drawMAV(state)
             self.drawWaypoints(waypoints, path.orbit_radius)
             self.drawPath(path)
-            self.drawMap(map)
+            self.drawMap(map_)
             self.plot_initialized = True
 
         # else update drawing on all other calls to update()
@@ -80,7 +80,7 @@ class world_viewer():
         # attitude of mav as a rotation matrix R from body to inertial
         R = Euler2Rotation(state.phi, state.theta, state.psi)
         # rotate and translate points defining mav
-        rotated_points = self.rotate_points(self.mav_points, R.T)
+        rotated_points = self.rotate_points(self.mav_points, R)
         translated_points = self.translate_points(rotated_points, mav_position)
         # convert North-East Down to East-North-Up for rendering
         R = np.array([[0, 1, 0], [1, 0, 0], [0, 0, -1]])
@@ -364,24 +364,24 @@ class world_viewer():
         points = points @ R.T
         return points
 
-    def drawMap(self, map):
-        # draw map of the world: buildings
+    def drawMap(self, map_):
+        # draw map_ of the world: buildings
         fullMesh = np.array([], dtype=np.float32).reshape(0,3,3)
         fullMeshColors = np.array([], dtype=np.float32).reshape(0,3,4)
-        for i in range(0, map.num_city_blocks):
-            for j in range (0, map.num_city_blocks):
-                mesh, meshColors = self.buildingVertFace(map.building_north[i],
-                                                      map.building_east[j],
-                                                      map.building_width,
-                                                      map.building_height[j, i])
+        for i in range(0, map_.num_city_blocks):
+            for j in range (0, map_.num_city_blocks):
+                mesh, meshColors = self.buildingVertFace(map_.building_north.item(i),
+                                                      map_.building_east.item(j),
+                                                      map_.building_width,
+                                                      map_.building_height[j, i])
                 fullMesh = np.concatenate((fullMesh, mesh), axis=0)
                 fullMeshColors = np.concatenate((fullMeshColors, meshColors), axis=0)
-        self.map = gl.GLMeshItem(vertexes= fullMesh,  # defines the triangular mesh (Nx3x3)
+        self.map_ = gl.GLMeshItem(vertexes= fullMesh,  # defines the triangular mesh (Nx3x3)
                       vertexColors= fullMeshColors,  # defines mesh colors (Nx1)
                       drawEdges=True,  # draw edges between mesh elements
                       smooth=False,  # speeds up rendering
                       computeNormals=False)  # speeds up rendering
-        self.window.addItem(self.map)
+        self.window.addItem(self.map_)
 
     def buildingVertFace(self, n, e, width, height):
         # define patches for a building located at (x, y)

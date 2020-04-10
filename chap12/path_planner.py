@@ -7,16 +7,16 @@
 import numpy as np
 import sys
 sys.path.append('..')
-from message_types.msg_waypoints import msg_waypoints
+from message_types.msg_waypoints import msgWaypoints
 
 class path_planner:
     def __init__(self):
         # waypoints definition
-        self.waypoints = msg_waypoints()
+        self.waypoints = msgWaypoints()
 
     def update(self, map, state):
         # this flag is set for one time step to signal a redraw in the viewer
-        # planner_flag = 1  # return simple waypoint path
+        #planner_flag = 1  # return simple waypoint path
         planner_flag = 2  # return dubins waypoint path
         # planner_flag = 3  # plan path through city using straight-line RRT
         # planner_flag = 4  # plan path through city using dubins RRT
@@ -24,29 +24,27 @@ class path_planner:
             self.waypoints.type = 'fillet'
             self.waypoints.num_waypoints = 4
             Va = 25
-            self.waypoints.ned[:, 0:self.waypoints.num_waypoints] \
-                = np.array([[0, 0, -100],
+            self.waypoints.ned = np.array([[0, 0, -100],
                             [1000, 0, -100],
                             [0, 1000, -100],
                             [1000, 1000, -100]]).T
-            self.waypoints.airspeed[:, 0:self.waypoints.num_waypoints] \
-                = np.array([[Va, Va, Va, Va]])
+            self.waypoints.airspeed = np.array([[Va, Va, Va, Va]])
         elif planner_flag == 2:
             self.waypoints.type = 'dubins'
             self.waypoints.num_waypoints = 4
             Va = 25
-            self.waypoints.ned[:, 0:self.waypoints.num_waypoints] \
-                = np.array([[0, 0, -100],
-                            [1000, 0, -100],
-                            [0, 1000, -100],
-                            [1000, 1000, -100]]).T
-            self.waypoints.airspeed[:, 0:self.waypoints.num_waypoints] \
-                = np.array([[Va, Va, Va, Va]])
-            self.waypoints.course[:, 0:self.waypoints.num_waypoints] \
-                = np.array([[np.radians(0),
-                             np.radians(45),
-                             np.radians(45),
-                             np.radians(-135)]])
+            self.waypoints.ned = np.array(
+                [[0, 0, -100],
+                [-700, 200, -100],
+                [0, -400, -100],
+                [1000, 700, -100]]).T
+            self.waypoints.airspeed = np.array(
+                [[Va, Va, Va, Va]])
+            self.waypoints.course = np.array(
+                [[np.radians(0),
+                np.radians(45),
+                np.radians(45),
+                np.radians(-135)]])
         elif planner_flag == 3:
             self.waypoints.type = 'fillet'
             self.waypoints.num_waypoints = 0
