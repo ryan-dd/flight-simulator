@@ -55,7 +55,12 @@ class Building():
                 [e + width / 2, n - width / 2],   #SE 1
                 [e - width / 2, n - width / 2],   #SW 2
                 [e - width / 2, n + width / 2]]   #NW 3
+        self.check_points = [[e + width / 2, n + width / 2], #NE 0
+                [e + width / (1.5), n - width / (1.5)],   #SE 1
+                [e - width / (1.5), n - width / (1.5)],   #SW 2
+                [e - width / (1.5), n + width / (1.5)]]   #NW 3
         self.poly = Polygon(self.points)
+        self.check_poly = Polygon(self.check_points)
     
     def get_coords(self):
         return self.points
