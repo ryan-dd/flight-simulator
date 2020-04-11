@@ -10,7 +10,7 @@ part of mavsim_python
 import numpy as np
 import parameters.planner_parameters as PLAN
 from random import uniform
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, Point
 
 class msgMap:
     def __init__(self):
@@ -41,7 +41,7 @@ class msgMyMap:
     
     def make_building(self, bounds):
         height = np.random.rand()*150+50
-        width = np.random.rand()*50+10
+        width = np.random.rand()*500+10
         n = uniform(0+width/2, bounds-width/2)
         e = uniform(0+width/2, bounds-width/2)
         return Building(height, width, n, e)
@@ -60,7 +60,7 @@ class Building():
         #         [e + width / (1.5), n - width / (1.5)],   #SE 1
         #         [e - width / (1.5), n - width / (1.5)],   #SW 2
         #         [e - width / (1.5), n + width / (1.5)]]   #NW 3
-        clearance_distance = 30
+        clearance_distance = 50
         self.check_points = [[e + width / 2, n + width / 2], #NE 0
                 [e + width / (2), n - width / (1.5)],   #SE 1
                 [e - width / (2), n - width / (1.5)],   #SW 2
@@ -112,7 +112,7 @@ class Building():
             
         
     def point_intersection(self, point):
-        return self.poly.contains(Point(point.position[0], point.position[1]))
+        return self.poly.contains(Point(point[0], point[1]))
         
 
 if __name__ == "__main__":

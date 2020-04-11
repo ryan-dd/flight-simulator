@@ -48,6 +48,7 @@ class waypoint_viewer():
             self.drawMAV(state)
             self.drawWaypoints(waypoints, path.orbit_radius)
             self.drawPath(path)
+            self.drawMap(map_)
             self.plot_initialized = True
 
         # else update drawing on all other calls to update()

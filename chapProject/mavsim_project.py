@@ -41,7 +41,9 @@ path_manage = path_manager()
 # waypoint definition
 from message_types.msg_map import msgMyMap
 from message_types.msg_waypoints import msgWaypoints
-bounds = 2000
+bounds = 10000
+
+# map_ = msgMyMap(200, bounds)
 map_ = msgMyMap(10, bounds)
 waypoints = msgWaypoints()
 #waypoints.type = 'straight_line'
@@ -50,8 +52,7 @@ waypoints.type = 'fillet'
 Va = PLAN.Va0
 start_node = [0, 0]
 end_node = [bounds, bounds]
-buildings = waypoint_view.drawMap(map_)
-waypoints.ned = calculate_voronoi_path(start_node, end_node, map_, map_.buildings)
+waypoints.ned = calculate_voronoi_path(start_node, end_node, map_, map_.buildings, bounds)
 waypoints.num_waypoints = waypoints.ned.shape[0]
 waypoints.ned = np.append(waypoints.ned, np.ones((waypoints.ned.shape[0], 1))*-100, axis=1).T
 Va = PLAN.Va0
