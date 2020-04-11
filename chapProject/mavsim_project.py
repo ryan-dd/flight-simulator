@@ -19,7 +19,9 @@ from chap10.path_follower import path_follower
 from chapProject.path_manager import path_manager
 from chapProject.waypoint_viewer import waypoint_viewer
 from chapProject.voronoi_path import calculate_voronoi_path
+import matplotlib.pyplot as plt
 
+np.random.seed(5555)
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
 waypoint_view = waypoint_viewer()  # initialize the viewer
@@ -52,7 +54,9 @@ waypoints.type = 'fillet'
 Va = PLAN.Va0
 start_node = [0, 0]
 end_node = [bounds, bounds]
-waypoints.ned = calculate_voronoi_path(start_node, end_node, map_, map_.buildings, bounds)
+buildings = waypoint_view.drawMap(map_)
+waypoints.ned = calculate_voronoi_path(start_node, end_node, map_, buildings, bounds, plot=True)
+waypoints.ned = np.flip(waypoints.ned, axis=1)
 waypoints.num_waypoints = waypoints.ned.shape[0]
 waypoints.ned = np.append(waypoints.ned, np.ones((waypoints.ned.shape[0], 1))*-100, axis=1).T
 Va = PLAN.Va0
@@ -99,6 +103,7 @@ while sim_time < SIM.end_time:
         waypoint_view.update(map_, waypoints, path, mav.true_state)  # plot path and MAV
         plot_time = 0
         init=True
+        plt.show()
     data_view.update(mav.true_state, # true states
                     estimated_state, # estimated states
                     commanded_state, # commanded states

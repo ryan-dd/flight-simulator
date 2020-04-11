@@ -24,7 +24,7 @@ class waypoint_viewer():
         self.app = pg.QtGui.QApplication([])  # initialize QT
         self.window = gl.GLViewWidget()  # initialize the view object
         self.window.setWindowTitle('Path Viewer')
-        self.window.setGeometry(0, 0, 1500, 1500)  # args: upper_left_x, upper_right_y, width, height
+        self.window.setGeometry(0, 0, 10000, 10000)  # args: upper_left_x, upper_right_y, width, height
         grid = gl.GLGridItem() # make a grid to represent the ground
         grid.scale(self.scale/20, self.scale/20, self.scale/20) # set the size of the grid (distance between each line)
         self.window.addItem(grid) # add grid to viewer
@@ -197,6 +197,7 @@ class waypoint_viewer():
                          [points[5], points[14], points[15]],  # vertical tail
                         ])
         return mesh
+
 
     def drawPath(self, path):
         red = np.array([[1., 0., 0., 1]])
@@ -373,11 +374,11 @@ class waypoint_viewer():
         fullMesh = np.array([], dtype=np.float32).reshape(0,3,3)
         fullMeshColors = np.array([], dtype=np.float32).reshape(0,3,4)
         for building in map_.buildings:
-            mesh, meshColors, building = self.buildingVertFace(building.n,
+            mesh, meshColors, building2 = self.buildingVertFace(building.n,
                                                     building.e,
                                                     building.width,
                                                     building.height)
-            buildings.append(building)
+            buildings.append(building2)
             fullMesh = np.concatenate((fullMesh, mesh), axis=0)
             fullMeshColors = np.concatenate((fullMeshColors, meshColors), axis=0)
         self.map_ = gl.GLMeshItem(vertexes= fullMesh,  # defines the triangular mesh (Nx3x3)
