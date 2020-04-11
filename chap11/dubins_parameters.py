@@ -31,7 +31,9 @@ class dubins_parameters:
 
     def update(self, p_start, chi_start, p_end, chi_end, R):
         ell = np.linalg.norm(p_start - p_end)
+        distance_longer = False
         if ell < 2 * R:
+            distance_longer_flag = True
             print('Error in Dubins Parameters: The distance between nodes must be larger than 2R.')
         else:
             crs = p_start + R*rotz(np.pi/2) @ np.vstack((

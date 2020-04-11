@@ -54,9 +54,18 @@ waypoints.ned = calculate_RRT_path(start_node, end_node, map_, buildings)
 waypoints.num_waypoints = waypoints.ned.shape[0]
 waypoints.ned = np.append(waypoints.ned, np.ones((waypoints.ned.shape[0], 1))*-100, axis=1).T
 Va = PLAN.Va0
-
 waypoints.airspeed = np.ones(waypoints.num_waypoints)*Va
-waypoints.course = np.ones(waypoints.num_waypoints)*np.radians(45)
+all_angles = []
+for i, waypoint in enumerate(waypoints.ned.T):
+    if i == 0:
+        prev = waypoint
+    else: 
+        direction = (waypoint[0:2] - prev[0:2])/np.linalg.norm(waypoint[0:2])
+        angle = np.arctan2(direction.item(1), direction.item(0))
+        prev = waypoint
+        all_angles.append(angle)
+all_angles.append(angle)
+waypoints.course = np.array(all_angles)
 
 # initialize the simulation time
 sim_time = SIM.start_time

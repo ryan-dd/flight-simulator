@@ -6,12 +6,11 @@ import matplotlib.pyplot as plt
 
 def calculate_RRT_path(start_pos, end_pos, map_, buildings, plot=False):   
     node_container = NodeContainer(start_pos)
-    D = 300
+    D = PLAN.R_min*2.2
     if plot:
         fig, ax = plt.subplots()
         for building in buildings:
             ax.plot(*building.poly.exterior.xy)
-
     while True:
         new_position = randomly_select_new_node(PLAN.city_width)
         closest_node = find_closest_node(new_position, 
@@ -39,7 +38,29 @@ def calculate_RRT_path(start_pos, end_pos, map_, buildings, plot=False):
         parent = parent.parent
     hi = 0
     final_waypoints.reverse()
+    final_points = smooth_paths(final_waypoints, buildings)
     return np.array(final_waypoints).reshape(-1,2)
+         
+def smooth_paths(final_waypoints, buildings):
+    waypoints = final_waypoints
+    curr_index = 0
+    next_index = 1
+    all_waypoints = []
+    all_waypoints.append(waypoints[curr_index])
+    while True:
+        waypoint = waypoints[curr_index]
+        compare_waypoint = waypoints[next_index]
+        intersects = check_if_intersects(compare_waypoint, waypoint, buildings)
+        if not intersects:
+            next_index += 1
+        else:
+            all_waypoints.append(waypoints[next_index-1])
+            curr_index = next_index-1            
+        if next_index == len(final_waypoints):
+            all_waypoints.append(final_waypoints[next_index-1])
+            break
+    return all_waypoints
+        
             
 def randomly_select_new_node(city_width):
     return np.random.rand(1,2)*PLAN.city_width
