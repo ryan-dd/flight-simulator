@@ -11,11 +11,6 @@ def calculate_voronoi_path(start_pos, end_pos, map_, buildings, bounds, plot=Fal
     graph_points = construct_graph_points(buildings, bounds, plot=plot)
     return connect_graph_points(graph_points, start_pos, end_pos, buildings, plot=plot)
 
-    
-class Node():
-    def __init__(self, position, goal):
-        self.neighbors = []
-
 def connect_graph_points(graph_points, start_pos, end_pos, buildings, neighbors=100, plot=False):
     graph_points = np.append(np.array([start_pos]), graph_points, axis=0)
     graph_points = np.append(graph_points, np.array([end_pos]), axis=0)
@@ -70,8 +65,29 @@ def connect_graph_points(graph_points, start_pos, end_pos, buildings, neighbors=
         to_plot = np.array(final_path)
         plt.plot(to_plot[:,0], to_plot[:,1])
     final_path.reverse()
+    final_path = smooth_paths(final_path, buildings)
     return np.array(final_path)
     
+     
+def smooth_paths(final_waypoints, buildings):
+    waypoints = final_waypoints
+    curr_index = 0
+    next_index = 1
+    all_waypoints = []
+    all_waypoints.append(waypoints[curr_index])
+    while True:
+        waypoint = waypoints[curr_index]
+        compare_waypoint = waypoints[next_index]
+        intersects = check_if_line_intersects(compare_waypoint, waypoint, buildings)
+        if not intersects:
+            next_index += 1
+        else:
+            all_waypoints.append(waypoints[next_index-1])
+            curr_index = next_index-1            
+        if next_index == len(final_waypoints):
+            all_waypoints.append(final_waypoints[next_index-1])
+            break
+    return all_waypoints
 
 def construct_graph_points(buildings, bounds, plot=False):
     if plot:
@@ -84,7 +100,7 @@ def construct_graph_points(buildings, bounds, plot=False):
         if plot:
             ax.plot(*building.poly.exterior.xy, color='b')
             to_plot = np.array(points)
-            ax.scatter(to_plot[:,0], to_plot[:,1])
+            # ax.scatter(to_plot[:,0], to_plot[:,1], color='b')
         all_points.extend(points)
     vor = Voronoi(all_points)
     points_for_graph = []
@@ -113,7 +129,7 @@ def check_if_line_intersects(next_pos, prev_pos, buildings):
                         (prev_pos.item(0), prev_pos.item(1))])
     intersects = False
     for building in buildings:
-        if line.intersects(building.poly):
+        if line.intersects(building.check_poly):
             intersects = True
             break
     return intersects

@@ -41,7 +41,7 @@ class msgMyMap:
     
     def make_building(self, bounds):
         height = np.random.rand()*150+50
-        width = np.random.rand()*500+10
+        width = np.random.rand()*500+200
         n = uniform(0+width/2, bounds-width/2)
         e = uniform(0+width/2, bounds-width/2)
         return Building(height, width, n, e)
@@ -112,7 +112,7 @@ class Building():
             
         
     def point_intersection(self, point):
-        return self.poly.contains(Point(point[0], point[1]))
+        return self.check_poly.contains(Point(point[0], point[1]))
         
 
 if __name__ == "__main__":
