@@ -43,8 +43,8 @@ from message_types.msg_map import msgMyMap
 from message_types.msg_waypoints import msgWaypoints
 bounds = 10000
 
-# map_ = msgMyMap(200, bounds)
-map_ = msgMyMap(10, bounds)
+map_ = msgMyMap(200, bounds)
+# map_ = msgMyMap(10, bounds)
 waypoints = msgWaypoints()
 #waypoints.type = 'straight_line'
 waypoints.type = 'fillet'
