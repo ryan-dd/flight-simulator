@@ -9,7 +9,7 @@ part of mavsim_python
 """
 import numpy as np
 import parameters.planner_parameters as PLAN
-from random import random
+from random import uniform
 from shapely.geometry import Polygon
 
 class msgMap:
@@ -37,34 +37,80 @@ class msgMap:
 
 class msgMyMap:
     def __init__(self, num_buildings, bounds):
-        self.all_buildings = [self.make_building() for i in range(num_buildings)]
+        self.buildings = [self.make_building(bounds) for i in range(num_buildings)]
     
-    def make_building(self):
+    def make_building(self, bounds):
         height = np.random.rand()*150+50
-        n = np.random.rand(0+bounds/2, bounds-bounds/2)
-        e = np.random.rand(0+bounds/2, bounds-bounds/2)
-        width = 30
-        return Building(height, n, e, width)
+        width = np.random.rand()*50+10
+        n = uniform(0+width/2, bounds-width/2)
+        e = uniform(0+width/2, bounds-width/2)
+        return Building(height, width, n, e)
     
 class Building():
     def __init__(self, height, width, n, e):
         self.height = height
         self.n = n
         self.e = e
+        self.width = width
         self.points = [[e + width / 2, n + width / 2], #NE 0
                 [e + width / 2, n - width / 2],   #SE 1
                 [e - width / 2, n - width / 2],   #SW 2
                 [e - width / 2, n + width / 2]]   #NW 3
+        # self.check_points = [[e + width / 2, n + width / 2], #NE 0
+        #         [e + width / (1.5), n - width / (1.5)],   #SE 1
+        #         [e - width / (1.5), n - width / (1.5)],   #SW 2
+        #         [e - width / (1.5), n + width / (1.5)]]   #NW 3
+        clearance_distance = 30
         self.check_points = [[e + width / 2, n + width / 2], #NE 0
-                [e + width / (1.5), n - width / (1.5)],   #SE 1
-                [e - width / (1.5), n - width / (1.5)],   #SW 2
-                [e - width / (1.5), n + width / (1.5)]]   #NW 3
+                [e + width / (2), n - width / (1.5)],   #SE 1
+                [e - width / (2), n - width / (1.5)],   #SW 2
+                [e - width / (2), n + width / (1.5)]]   #NW 3
+        # self.check_points = [
+        #     [0,0],
+        #     [0,0],
+        #     [0,0],
+        #     [0,0]
+        #     ]
+        self.check_points = np.array(self.check_points)
+        self.check_points[0,0] += clearance_distance
+        self.check_points[1,0] += clearance_distance
+        self.check_points[2,0] -= clearance_distance
+        self.check_points[3,0] -= clearance_distance
+        self.check_points[0,1] += clearance_distance
+        self.check_points[3,1] += clearance_distance
+        self.check_points[1,1] -= clearance_distance
+        self.check_points[2,1] -= clearance_distance
         self.poly = Polygon(self.points)
         self.check_poly = Polygon(self.check_points)
     
     def get_coords(self):
         return self.points
-
+    
+    def get_discretized_coords(self, number_per_line):
+        points1 = self.get_line_disc_coords_in_between(self.points[0], self.points[1], number_per_line)
+        points2 = self.get_line_disc_coords_in_between(self.points[0], self.points[3], number_per_line)
+        points3 = self.get_line_disc_coords_in_between(self.points[1], self.points[2], number_per_line)
+        points4 = self.get_line_disc_coords_in_between(self.points[2], self.points[3], number_per_line)
+        points1.extend(points2)
+        points1.extend(points3)
+        points1.extend(points4)
+        points1.extend(self.points)
+        return points1
+        
+    
+    def get_line_disc_coords_in_between(self, point1, point2, number):
+        point2 = np.array(point2)
+        point1 = np.array(point1)
+        line_length = np.linalg.norm(point2-point1)
+        line_direction = (point2-point1)/line_length
+        distance = line_length/(number+1)
+        all_points = []
+        for i in range(number):
+            new_point = point1 + line_direction*distance*(i+1)
+            all_points.append(new_point)
+        return all_points
+            
+        
     def point_intersection(self, point):
         return self.poly.contains(Point(point.position[0], point.position[1]))
         

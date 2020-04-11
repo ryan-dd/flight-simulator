@@ -16,9 +16,9 @@ from chap6.autopilot import autopilot
 from chap7.mav_dynamics import mavDynamics
 from chap8.observer import observer
 from chap10.path_follower import path_follower
-from chap12RRT.path_manager import path_manager
-from chap12RRT.waypoint_viewer import waypoint_viewer
-from chap12RRT.RRT import calculate_RRT_path
+from chapProject.path_manager import path_manager
+from chapProject.waypoint_viewer import waypoint_viewer
+from chapProject.voronoi_path import calculate_voronoi_path
 
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
@@ -39,18 +39,19 @@ path_follow = path_follower()
 path_manage = path_manager()
 
 # waypoint definition
-from message_types.msg_map import msgMap
+from message_types.msg_map import msgMyMap
 from message_types.msg_waypoints import msgWaypoints
-map_ = msgMap()
+bounds = 2000
+map_ = msgMyMap(10, bounds)
 waypoints = msgWaypoints()
 #waypoints.type = 'straight_line'
-#waypoints.type = 'fillet'
-waypoints.type = 'dubins'
+waypoints.type = 'fillet'
+#waypoints.type = 'dubins'
 Va = PLAN.Va0
 start_node = [0, 0]
-end_node = [2000, 2000]
+end_node = [bounds, bounds]
 buildings = waypoint_view.drawMap(map_)
-waypoints.ned = calculate_RRT_path(start_node, end_node, map_, buildings)
+waypoints.ned = calculate_voronoi_path(start_node, end_node, map_, map_.buildings)
 waypoints.num_waypoints = waypoints.ned.shape[0]
 waypoints.ned = np.append(waypoints.ned, np.ones((waypoints.ned.shape[0], 1))*-100, axis=1).T
 Va = PLAN.Va0

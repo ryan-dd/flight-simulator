@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 def calculate_RRT_path(start_pos, end_pos, map_, buildings, plot=False):   
     node_container = NodeContainer(start_pos)
-    D = PLAN.R_min*2.2
+    D = 550
     if plot:
         fig, ax = plt.subplots()
         for building in buildings:
@@ -78,7 +78,7 @@ def check_if_intersects(new_configuration_pos, closest_pos, buildings):
                         (closest_pos.item(0), closest_pos.item(1))])
     intersects = False
     for building in buildings:
-        if line.intersects(building.poly):
+        if line.intersects(building.check_poly):
             intersects = True
             break
     return intersects
