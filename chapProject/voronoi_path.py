@@ -61,11 +61,11 @@ def connect_graph_points(graph_points, start_pos, end_pos, buildings, neighbors=
         final_path.append(graph_points[curr])
         curr = int(parent[curr])
     final_path.append(graph_points[curr])
+    final_path.reverse()
+    final_path = smooth_paths(final_path, buildings)
     if plot:
         to_plot = np.array(final_path)
         plt.plot(to_plot[:,0], to_plot[:,1])
-    final_path.reverse()
-    final_path = smooth_paths(final_path, buildings)
     return np.array(final_path)
     
      
@@ -129,7 +129,7 @@ def check_if_line_intersects(next_pos, prev_pos, buildings):
                         (prev_pos.item(0), prev_pos.item(1))])
     intersects = False
     for building in buildings:
-        if line.intersects(building.check_poly):
+        if line.intersects(building.poly):
             intersects = True
             break
     return intersects

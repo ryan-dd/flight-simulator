@@ -104,10 +104,10 @@ while sim_time < SIM.end_time:
         plot_time = 0
         init=True
         plt.show()
-    data_view.update(mav.true_state, # true states
-                    estimated_state, # estimated states
-                    commanded_state, # commanded states
-                    SIM.ts_simulation)
+        data_view.update(mav.true_state, # true states
+                        estimated_state, # estimated states
+                        commanded_state, # commanded states
+                        SIM.ts_simulation)
     if VIDEO == True: video.update(sim_time)
 
     #-------increment time-------------

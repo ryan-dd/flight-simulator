@@ -112,7 +112,7 @@ class Building():
             
         
     def point_intersection(self, point):
-        return self.check_poly.contains(Point(point[0], point[1]))
+        return self.poly.contains(Point(point[0], point[1]))
         
 
 if __name__ == "__main__":
