@@ -38,7 +38,7 @@ plot_time = sim_time
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
     # -------set control surfaces-------------
-    delta_e = -0.2
+    delta_e = 0.01
     delta_a = 0.0
     delta_r = 0.005
     delta_t = 0.5
