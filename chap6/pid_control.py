@@ -48,7 +48,7 @@ class pidControl:
         # saturate PID control at limit
         u_sat = self._saturate(u)
         # integral anti-windup
-        #   adjust integrator to keep u out of saturation
+        #  adjust integrator to keep u out of saturation
         if np.abs(self.ki) > 0.0001:
             self.integrator = self.integrator \
                               + (self.Ts / self.ki) * (u_sat - u)

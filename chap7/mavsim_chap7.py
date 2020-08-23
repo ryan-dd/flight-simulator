@@ -18,7 +18,7 @@ from chap7.sensor_viewer import sensor_viewer
 from tools.signals import signals
 
 # initialize the visualization
-VIDEO = True  # True==write video, False==don't write video
+VIDEO = False # True==write video, False==don't write video
 mav_view = mavViewer()  # initialize the mav viewer
 data_view = dataViewer()  # initialize view of data plots
 sensor_view = sensor_viewer()  # initialize view of sensor data plots

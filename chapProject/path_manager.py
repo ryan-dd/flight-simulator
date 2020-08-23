@@ -1,7 +1,7 @@
 import numpy as np
 import sys
 sys.path.append('..')
-from chap12RRT.dubins_parameters import dubins_parameters
+from chap12.dubins_parameters import dubins_parameters
 from message_types.msg_path import msgPath
 
 class path_manager:

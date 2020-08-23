@@ -43,8 +43,8 @@ from message_types.msg_waypoints import msgWaypoints
 map_ = msgMap()
 waypoints = msgWaypoints()
 #waypoints.type = 'straight_line'
-#waypoints.type = 'fillet'
-waypoints.type = 'dubins'
+waypoints.type = 'fillet'
+#waypoints.type = 'dubins'
 Va = PLAN.Va0
 waypoints.ned = np.array(
                 [[0, 0, -100],
