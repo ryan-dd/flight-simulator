@@ -23,20 +23,20 @@ if VIDEO is True:
                         output_rate=SIM.ts_video)
 
 # initialize the simulation time
-sim_time = SIM.start_time
-
+sim_time = 0
+end_time = 60
 # main simulation loop
-while sim_time < SIM.end_time:
+while sim_time < end_time:
     # -------vary states to check viewer-------------
-    if sim_time < SIM.end_time/6:
+    if sim_time < end_time/6:
         state.pn += 10*SIM.ts_simulation
-    elif sim_time < 2*SIM.end_time/6:
+    elif sim_time < 2*end_time/6:
         state.pe += 10*SIM.ts_simulation
-    elif sim_time < 3*SIM.end_time/6:
+    elif sim_time < 3*end_time/6:
         state.h += 10*SIM.ts_simulation
-    elif sim_time < 4*SIM.end_time/6:
+    elif sim_time < 4*end_time/6:
         state.psi += 0.1*SIM.ts_simulation
-    elif sim_time < 5*SIM.end_time/6:
+    elif sim_time < 5*end_time/6:
         state.theta += 0.1*SIM.ts_simulation
     else:
         state.phi += 0.1*SIM.ts_simulation
